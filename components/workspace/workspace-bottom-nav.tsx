@@ -27,7 +27,7 @@ export function WorkspaceBottomNav({ role }: WorkspaceBottomNavProps) {
       style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       aria-label="Primary navigation"
     >
-      <div className="mx-auto grid max-w-lg grid-cols-5 gap-1 px-2 pt-1">
+      <div className="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2 pt-1">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = item.href === activeNavHref;
@@ -47,11 +47,7 @@ export function WorkspaceBottomNav({ role }: WorkspaceBottomNavProps) {
             >
               <Icon className={cn("size-5 shrink-0", isActive && "stroke-[2.5]")} />
               <span className="max-w-full truncate px-0.5">
-                {item.title === "Notifications"
-                  ? "Alerts"
-                  : item.title === "Dashboard"
-                    ? "Home"
-                    : item.title.split(" ")[0]}
+                {item.title === "Dashboard" ? "Home" : item.title.split(" ")[0]}
               </span>
             </button>
           );

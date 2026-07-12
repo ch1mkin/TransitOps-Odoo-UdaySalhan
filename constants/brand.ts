@@ -4,9 +4,9 @@
  */
 export const BRAND = {
   name: "TransitOps",
-  logoIcon: "/brand/logo.png",
-  logo: "/brand/logo.png",
-  favicon: "/brand/logo.png",
-  appleTouchIcon: "/brand/logo.png",
-  ogImage: "/brand/logo.png",
+  logoIcon: "/brand/logo.svg",
+  logo: "/brand/logo.svg",
+  favicon: "/brand/logo.svg",
+  appleTouchIcon: "/brand/logo.svg",
+  ogImage: "/brand/logo.svg",
 } as const;

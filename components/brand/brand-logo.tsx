@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { TransitOpsMark, TransitOpsWordmark } from "@/components/brand/transitops-mark";
 import { BRAND } from "@/constants/brand";
 import { cn } from "@/lib/utils";
 
@@ -13,29 +13,25 @@ interface BrandLogoProps {
   priority?: boolean;
 }
 
-const aspectRatio: Record<BrandLogoVariant, number> = {
-  icon: 1,
-  full: 1,
-};
-
 export function BrandLogo({
   variant = "icon",
   size = 32,
   className,
-  priority = false,
 }: BrandLogoProps) {
-  const src = variant === "full" ? BRAND.logo : BRAND.logoIcon;
-  const width = size;
-  const height = Math.round(size / aspectRatio[variant]);
+  if (variant === "full") {
+    return (
+      <TransitOpsWordmark
+        size={size}
+        className={cn("object-contain", className)}
+      />
+    );
+  }
 
   return (
-    <Image
-      src={src}
-      alt={BRAND.name}
-      width={width}
-      height={height}
+    <TransitOpsMark
+      size={size}
       className={cn("object-contain", className)}
-      priority={priority}
+      aria-label={BRAND.name}
     />
   );
 }

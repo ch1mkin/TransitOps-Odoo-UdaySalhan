@@ -8,7 +8,7 @@ import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
-import { TruckLoaderInline } from "@/components/ui/truck-loader";
+import { TruckLoader, TruckLoaderInline } from "@/components/ui/truck-loader";
 import {
   Card,
   CardContent,
@@ -51,12 +51,11 @@ function getSupabaseClient() {
   }
 }
 
-type AuthStep = "credentials" | "verify";
 
 export function AuthForm() {
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [step, setStep] = useState<AuthStep>("credentials");
+  const [otpSent, setOtpSent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -86,10 +85,16 @@ export function AuthForm() {
   });
 
   const isLogin = mode === "login";
-  const isVerifyStep = step === "verify";
   const registerPassword = registerForm.watch("password");
   const registerConfirmPassword = registerForm.watch("confirmPassword");
   const verifyEmail = isLogin ? pendingLogin?.email : pendingRegister?.email;
+
+  const resetVerification = () => {
+    setOtpSent(false);
+    setOtpCode("");
+    setPendingLogin(null);
+    setPendingRegister(null);
+  };
 
   useEffect(() => {
     if (searchParams.get("mode") === "register") {
@@ -105,13 +110,6 @@ export function AuthForm() {
       setConfigError(getSupabaseEnvErrorMessage(error));
     }
   }, []);
-
-  const resetVerification = () => {
-    setStep("credentials");
-    setOtpCode("");
-    setPendingLogin(null);
-    setPendingRegister(null);
-  };
 
   const completeRegistration = async (email: string, password: string) => {
     const supabase = getSupabaseClient();
@@ -144,7 +142,7 @@ export function AuthForm() {
 
       setPendingLogin(values);
       setOtpCode("");
-      setStep("verify");
+      setOtpSent(true);
       toast.success(
         result.devCode
           ? `Verification code sent. Dev code: ${result.devCode}`
@@ -172,7 +170,7 @@ export function AuthForm() {
 
       setPendingRegister(values);
       setOtpCode("");
-      setStep("verify");
+      setOtpSent(true);
       toast.success(
         result.devCode
           ? `Verification code sent. Dev code: ${result.devCode}`
@@ -272,23 +270,47 @@ export function AuthForm() {
     }
   };
 
-  const onSubmit = isLogin
-    ? loginForm.handleSubmit(handleLogin)
-    : registerForm.handleSubmit(handleRegister);
+  const handleSubmit = async () => {
+    if (otpSent) {
+      await handleVerifyOtp();
+      return;
+    }
+
+    if (isLogin) {
+      await loginForm.handleSubmit(handleLogin)();
+      return;
+    }
+
+    await registerForm.handleSubmit(handleRegister)();
+  };
+
+  const onSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void handleSubmit();
+  };
 
   return (
     <>
       <MinimalConfetti active={showConfetti} />
 
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
+        <Card className="relative w-full max-w-md overflow-hidden">
+          {loading ? (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/85 backdrop-blur-[1px]">
+              <TruckLoader
+                size="sm"
+                label={otpSent ? "Signing you in…" : isLogin ? "Signing in…" : "Creating account…"}
+              />
+            </div>
+          ) : null}
+
           <CardHeader className="space-y-3 text-center">
-            <div className="mx-auto flex size-12 items-center justify-center overflow-hidden rounded-xl">
-              <BrandLogo variant="icon" size={48} priority />
+            <div className="mx-auto flex size-14 items-center justify-center">
+              <BrandLogo variant="icon" size={56} priority />
             </div>
             <CardTitle className="text-2xl">TransitOps</CardTitle>
             <CardDescription>
-              {isVerifyStep
+              {otpSent
                 ? `Enter the 4-digit code sent to ${verifyEmail ?? "your email"}`
                 : isLogin
                   ? "Sign in to your transport operations workspace"
@@ -307,92 +329,58 @@ export function AuthForm() {
               </div>
             )}
 
-            {isVerifyStep ? (
-              <div className="space-y-5">
-                <OtpInput value={otpCode} onChange={setOtpCode} disabled={loading} />
-                <Button
+            {!otpSent ? (
+              <div className="mb-6 flex rounded-lg bg-muted p-1">
+                <button
                   type="button"
-                  className="w-full"
-                  disabled={loading || otpCode.length !== 4 || Boolean(configError)}
-                  onClick={() => void handleVerifyOtp()}
+                  onClick={() => {
+                    setMode("login");
+                    resetVerification();
+                  }}
+                  className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
+                    isLogin
+                      ? "bg-card text-foreground workspace-shadow"
+                      : "text-muted-foreground"
+                  }`}
                 >
-                  {loading ? (
-                    <span className="inline-flex items-center gap-2">
-                      <TruckLoaderInline />
-                      Verifying…
-                    </span>
-                  ) : (
-                    "Verify and continue"
-                  )}
-                </Button>
-                <div className="flex items-center justify-between text-sm">
-                  <button
-                    type="button"
-                    className="text-muted-foreground hover:text-foreground"
-                    onClick={resetVerification}
-                  >
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    className="text-accent hover:underline"
-                    disabled={loading}
-                    onClick={() => void handleResendOtp()}
-                  >
-                    Resend code
-                  </button>
-                </div>
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("register");
+                    resetVerification();
+                  }}
+                  className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
+                    !isLogin
+                      ? "bg-card text-foreground workspace-shadow"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  Create Account
+                </button>
               </div>
-            ) : (
-              <>
-                <div className="mb-6 flex rounded-lg bg-muted p-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode("login");
-                      resetVerification();
-                    }}
-                    className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
-                      isLogin
-                        ? "bg-card text-foreground workspace-shadow"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    Sign In
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode("register");
-                      resetVerification();
-                    }}
-                    className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
-                      !isLogin
-                        ? "bg-card text-foreground workspace-shadow"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    Create Account
-                  </button>
+            ) : null}
+
+            <form onSubmit={onSubmit} className="space-y-4">
+              {!otpSent && !isLogin ? (
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input
+                    id="fullName"
+                    placeholder="Rajesh Kumar"
+                    {...registerForm.register("fullName")}
+                  />
+                  {registerForm.formState.errors.fullName ? (
+                    <p className="text-xs text-destructive">
+                      {registerForm.formState.errors.fullName.message}
+                    </p>
+                  ) : null}
                 </div>
+              ) : null}
 
-                <form onSubmit={onSubmit} className="space-y-4">
-                  {!isLogin && (
-                    <div className="space-y-2">
-                      <Label htmlFor="fullName">Full Name</Label>
-                      <Input
-                        id="fullName"
-                        placeholder="Rajesh Kumar"
-                        {...registerForm.register("fullName")}
-                      />
-                      {registerForm.formState.errors.fullName && (
-                        <p className="text-xs text-destructive">
-                          {registerForm.formState.errors.fullName.message}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
+              {!otpSent ? (
+                <>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -405,14 +393,14 @@ export function AuthForm() {
                     />
                     {(isLogin
                       ? loginForm.formState.errors.email
-                      : registerForm.formState.errors.email) && (
+                      : registerForm.formState.errors.email) ? (
                       <p className="text-xs text-destructive">
                         {(isLogin
                           ? loginForm.formState.errors.email
                           : registerForm.formState.errors.email
                         )?.message}
                       </p>
-                    )}
+                    ) : null}
                   </div>
 
                   <div className="space-y-2">
@@ -441,102 +429,128 @@ export function AuthForm() {
                     </div>
                     {(isLogin
                       ? loginForm.formState.errors.password
-                      : registerForm.formState.errors.password) && (
+                      : registerForm.formState.errors.password) ? (
                       <p className="text-xs text-destructive">
                         {(isLogin
                           ? loginForm.formState.errors.password
                           : registerForm.formState.errors.password
                         )?.message}
                       </p>
-                    )}
-                    {!isLogin && (
+                    ) : null}
+                    {!isLogin ? (
                       <PasswordRequirements password={registerPassword ?? ""} />
-                    )}
+                    ) : null}
+                  </div>
+                </>
+              ) : null}
+
+              {!otpSent && !isLogin ? (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        {...registerForm.register("confirmPassword")}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        aria-label={
+                          showConfirmPassword
+                            ? "Hide confirm password"
+                            : "Show confirm password"
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="size-4" />
+                        ) : (
+                          <Eye className="size-4" />
+                        )}
+                      </button>
+                    </div>
+                    <PasswordMatchIndicator
+                      password={registerPassword ?? ""}
+                      confirmPassword={registerConfirmPassword ?? ""}
+                    />
+                    {registerForm.formState.errors.confirmPassword ? (
+                      <p className="text-xs text-destructive">
+                        {registerForm.formState.errors.confirmPassword.message}
+                      </p>
+                    ) : null}
                   </div>
 
-                  {!isLogin && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="confirmPassword">Confirm Password</Label>
-                        <div className="relative">
-                          <Input
-                            id="confirmPassword"
-                            type={showConfirmPassword ? "text" : "password"}
-                            placeholder="••••••••"
-                            {...registerForm.register("confirmPassword")}
-                          />
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setShowConfirmPassword(!showConfirmPassword)
-                            }
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                            aria-label={
-                              showConfirmPassword
-                                ? "Hide confirm password"
-                                : "Show confirm password"
-                            }
-                          >
-                            {showConfirmPassword ? (
-                              <EyeOff className="size-4" />
-                            ) : (
-                              <Eye className="size-4" />
-                            )}
-                          </button>
-                        </div>
-                        <PasswordMatchIndicator
-                          password={registerPassword ?? ""}
-                          confirmPassword={registerConfirmPassword ?? ""}
-                        />
-                        {registerForm.formState.errors.confirmPassword && (
-                          <p className="text-xs text-destructive">
-                            {registerForm.formState.errors.confirmPassword.message}
-                          </p>
-                        )}
-                      </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="role">Role</Label>
+                    <select
+                      id="role"
+                      className="flex h-9 w-full rounded-lg border border-input bg-card px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      {...registerForm.register("role")}
+                    >
+                      <option value="">Select your role</option>
+                      {ROLE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    {registerForm.formState.errors.role ? (
+                      <p className="text-xs text-destructive">
+                        {registerForm.formState.errors.role.message}
+                      </p>
+                    ) : null}
+                  </div>
+                </>
+              ) : null}
 
-                      <div className="space-y-2">
-                        <Label htmlFor="role">Role</Label>
-                        <select
-                          id="role"
-                          className="flex h-9 w-full rounded-lg border border-input bg-card px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                          {...registerForm.register("role")}
-                        >
-                          <option value="">Select your role</option>
-                          {ROLE_OPTIONS.map((opt) => (
-                            <option key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </option>
-                          ))}
-                        </select>
-                        {registerForm.formState.errors.role && (
-                          <p className="text-xs text-destructive">
-                            {registerForm.formState.errors.role.message}
-                          </p>
-                        )}
-                      </div>
-                    </>
-                  )}
+              {otpSent ? (
+                <div className="space-y-4">
+                  <OtpInput value={otpCode} onChange={setOtpCode} disabled={loading} />
+                  <div className="flex items-center justify-between text-sm">
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={resetVerification}
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      className="text-accent hover:underline"
+                      disabled={loading}
+                      onClick={() => void handleResendOtp()}
+                    >
+                      Resend code
+                    </button>
+                  </div>
+                </div>
+              ) : null}
 
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={loading || Boolean(configError) || showConfetti}
-                  >
-                    {loading ? (
-                      <span className="inline-flex items-center gap-2">
-                        <TruckLoaderInline />
-                        {isLogin ? "Sending code…" : "Sending code…"}
-                      </span>
-                    ) : isLogin ? (
-                      "Continue to verification"
-                    ) : (
-                      "Continue to verification"
-                    )}
-                  </Button>
-                </form>
-              </>
-            )}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={
+                  loading ||
+                  Boolean(configError) ||
+                  showConfetti ||
+                  (otpSent && otpCode.length !== 4)
+                }
+              >
+                {loading ? (
+                  <span className="inline-flex items-center gap-2">
+                    <TruckLoaderInline />
+                    {isLogin ? "Sign In" : "Create Account"}
+                  </span>
+                ) : isLogin ? (
+                  "Sign In"
+                ) : (
+                  "Create Account"
+                )}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       </div>

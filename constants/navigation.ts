@@ -36,12 +36,6 @@ export const NAV_ITEMS: NavItem[] = [
     icon: LayoutDashboard,
     roles: ALL_ROLES,
   },
-  {
-    title: "Notifications",
-    href: "/notifications",
-    icon: Bell,
-    roles: ALL_ROLES,
-  },
   // Fleet Manager
   {
     title: "Vehicle Registry",
@@ -131,6 +125,12 @@ export const NAV_ITEMS: NavItem[] = [
     roles: [ROLES.FINANCIAL_ANALYST],
   },
   {
+    title: "Notifications",
+    href: "/notifications",
+    icon: Bell,
+    roles: ALL_ROLES,
+  },
+  {
     title: "Settings",
     href: "/settings",
     icon: Settings,
@@ -156,26 +156,27 @@ const MOBILE_PRIMARY_HREFS: Record<Role, string[]> = {
   [ROLES.FINANCIAL_ANALYST]: ["/fuel", "/expenses"],
 };
 
-/** Primary destinations pinned to the mobile bottom bar (excluding the menu button). */
+/** Primary destinations pinned to the mobile bottom bar (excluding menu). */
 export function getMobileBottomNavItems(role: Role): NavItem[] {
   const all = getNavForRole(role);
   const find = (href: string) => all.find((item) => item.href === href);
 
   const dashboard = find("/dashboard");
-  const notifications = find("/notifications");
   const primaries = MOBILE_PRIMARY_HREFS[role]
     .map((href) => find(href))
     .filter((item): item is NavItem => Boolean(item));
 
-  return [dashboard, ...primaries, notifications].filter(
-    (item): item is NavItem => Boolean(item)
-  );
+  return [dashboard, ...primaries].filter((item): item is NavItem => Boolean(item));
 }
 
 /** Remaining navigation items shown inside the mobile menu drawer. */
 export function getMobileMenuNavItems(role: Role): NavItem[] {
   const pinned = new Set(getMobileBottomNavItems(role).map((item) => item.href));
-  return getNavForRole(role).filter((item) => !pinned.has(item.href));
+  const items = getNavForRole(role).filter((item) => !pinned.has(item.href));
+  const notifications = items.find((item) => item.href === "/notifications");
+  const rest = items.filter((item) => item.href !== "/notifications");
+
+  return notifications ? [...rest, notifications] : rest;
 }
 
 export function getNavTitleForPath(pathname: string, role: Role): string {
