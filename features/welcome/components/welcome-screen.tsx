@@ -6,6 +6,7 @@ import {
   Truck,
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import { AboutTrigger } from "@/components/about/about-trigger";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -41,9 +42,12 @@ export function WelcomeScreen() {
             <BrandLogo variant="icon" size={36} className="rounded-xl" priority />
             <span className="text-sm font-semibold tracking-tight">TransitOps</span>
           </Link>
-          <Link href="/auth" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
-            Sign in
-          </Link>
+          <div className="flex items-center gap-1">
+            <AboutTrigger />
+            <Link href="/auth" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+              Sign in
+            </Link>
+          </div>
         </div>
       </header>
 

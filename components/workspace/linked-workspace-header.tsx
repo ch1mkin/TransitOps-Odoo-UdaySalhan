@@ -1,6 +1,7 @@
 "use client";
 
 import { Network } from "lucide-react";
+import { AboutTrigger } from "@/components/about/about-trigger";
 import { NotificationBell } from "@/components/workspace/notification-bell";
 
 interface LinkedWorkspaceHeaderProps {
@@ -16,6 +17,7 @@ export function LinkedWorkspaceHeader({ userId }: LinkedWorkspaceHeaderProps) {
       <Network className="size-3.5 text-amber-400" />
       <span>Linked Workspace</span>
       <div className="ml-2 flex-1 border-b border-dashed border-slate-600/60" />
+      <AboutTrigger variant="workspace" />
       <NotificationBell userId={userId} />
     </div>
   );
