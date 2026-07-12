@@ -1,70 +1,47 @@
 # TransitOps
 
-Smart Transport Operations Platform — a modern fleet management SaaS with a **software-like workspace UI**.
+**Smart Transport Operations Platform**
 
-## Quick Start
+A fleet and transport operations tool for logistics teams — built to replace spreadsheets and manual logbooks with one centralized system.
 
-### 1. Environment
-
-Copy `.env.local.example` to `.env.local` and add your Supabase credentials:
-
-```bash
-cp .env.local.example .env.local
-```
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-```
-
-### 2. Database
-
-Run the migration in Supabase SQL Editor:
-
-```
-supabase/migrations/001_profiles.sql
-```
-
-### 3. Run
-
-```bash
-npm install
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000)
+**Uday Salhan** — Team Leader
 
 ---
 
-## Workspace UI
+## What We're Building
 
-TransitOps uses a **Linked Workspace** shell inspired by desktop software:
+TransitOps helps companies manage the full lifecycle of transport operations: fleet, drivers, trips, maintenance, fuel, expenses, and reporting — with business rules enforced automatically.
 
-| Feature | Behavior |
-|---------|----------|
-| **Linked Workspace header** | Dark bar indicating connected workspace context |
-| **Chrome-like tabs** | Draggable, closable tabs inside the app chrome |
-| **Home tab** | Pinned — always available |
-| **Entity tabs** | Open vehicles, trips, drivers as tabs |
-| **Double-click tab** | Pop out into floating sub-window |
-| **Pop-out windows** | Draggable, minimizable, dockable back to tabs |
-| **Collapsible sidebar** | Icon-only mode for more workspace space |
-| **Module panels** | Profile, filters slide in from the right |
-| **Ephemeral modules** | Auto-close when navigating to another page |
+### Core modules
 
-### Keyboard / Mouse
+- **Dashboard** — fleet KPIs, utilization, and operational overview
+- **Fleet** — vehicle registry, status, capacity, and documents
+- **Drivers** — roster, licenses, safety scores, and availability
+- **Trips** — dispatch, track, complete, or cancel trips end-to-end
+- **Maintenance** — service logs and vehicle shop status
+- **Fuel & Expenses** — operational cost tracking
+- **Reports** — utilization, fuel efficiency, ROI, and trends
 
-- **Click tab** — activate and navigate
-- **Drag tab** — reorder (Home stays pinned)
-- **Double-click tab** — pop out to floating window
-- **X on tab** — close tab
-- **Profile in sidebar** — opens ephemeral module panel
+### Experience we're aiming for
+
+Not a traditional ERP. TransitOps should feel like modern software — clean, fast, and usable all day:
+
+- **Linked workspace** — browser-style tabs inside the app
+- **Collapsible modules** — profile, filters, and detail panels that slide in and out
+- **Pop-out windows** — pull a record into a small floating window
+- **Role-based access** — Fleet Manager, Dispatcher, Safety Officer, Financial Analyst
+
+### Business rules (non-negotiable)
+
+- Retired or in-shop vehicles cannot be dispatched
+- Expired or suspended drivers cannot be assigned
+- Cargo weight must stay within vehicle capacity
+- Dispatch / complete / cancel trips auto-update vehicle and driver status
+
+### Tech
+
+Next.js · React · TypeScript · Tailwind · Supabase
 
 ---
 
-## Tech Stack
-
-Next.js 15 · React 19 · TypeScript · Tailwind CSS · Supabase · Zustand · TanStack Query · React Hook Form · Zod
-
-See `context.md` for full product specification.
+*Hackathon build in progress — full README coming at the end.*
