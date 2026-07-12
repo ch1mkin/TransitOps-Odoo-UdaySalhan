@@ -1,4 +1,12 @@
 import { z } from "zod";
+import { ROLES } from "@/constants/roles";
+
+const broadcastRoleValues = [
+  ROLES.FLEET_MANAGER,
+  ROLES.DISPATCHER,
+  ROLES.SAFETY_OFFICER,
+  ROLES.FINANCIAL_ANALYST,
+] as const;
 
 export const vehicleSchema = z.object({
   registration_number: z.string().min(3, "Registration is required"),
@@ -110,3 +118,18 @@ export const driverDocumentSchema = z.object({
 });
 
 export type DriverDocumentInput = z.infer<typeof driverDocumentSchema>;
+
+export const broadcastNotificationSchema = z.object({
+  title: z.string().trim().min(2, "Title is required").max(120),
+  message: z.string().trim().min(2, "Message is required").max(500),
+  link: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => (value ? value : undefined)),
+  roles: z
+    .array(z.enum(broadcastRoleValues))
+    .min(1, "Select at least one role"),
+});
+
+export type BroadcastNotificationInput = z.infer<typeof broadcastNotificationSchema>;

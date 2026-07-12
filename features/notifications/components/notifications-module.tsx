@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import { ModulePage } from "@/components/data/module-page";
 import { Button } from "@/components/ui/button";
+import { NotificationBroadcastForm } from "@/features/notifications/components/notification-broadcast-form";
 import { markAllNotificationsRead, markNotificationRead } from "@/lib/fleet/actions";
 import { createClient } from "@/lib/supabase/client";
 import { mapNotification } from "@/lib/fleet/mappers";
@@ -66,7 +67,10 @@ export function NotificationsModule({ userId }: NotificationsModuleProps) {
         ) : null
       }
     >
-      <div className="rounded-xl border border-border bg-card workspace-shadow">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+        <NotificationBroadcastForm onSent={() => void invalidate()} />
+
+        <div className="rounded-xl border border-border bg-card workspace-shadow">
         {isLoading ? (
           <p className="px-4 py-10 text-center text-sm text-muted-foreground">Loading notifications…</p>
         ) : notifications.length === 0 ? (
@@ -105,6 +109,7 @@ export function NotificationsModule({ userId }: NotificationsModuleProps) {
             ))}
           </div>
         )}
+        </div>
       </div>
     </ModulePage>
   );

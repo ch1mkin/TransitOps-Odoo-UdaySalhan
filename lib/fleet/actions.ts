@@ -18,6 +18,7 @@ import {
 } from "@/lib/fleet/permissions";
 import { requireSessionRole } from "@/lib/fleet/session";
 import {
+  broadcastNotificationSchema,
   completeTripSchema,
   driverSchema,
   expenseSchema,
@@ -26,6 +27,7 @@ import {
   tripSchema,
   vehicleDocumentSchema,
   vehicleSchema,
+  type BroadcastNotificationInput,
   type CompleteTripInput,
   type DriverInput,
   type ExpenseInput,
@@ -47,6 +49,7 @@ import {
 } from "@/lib/fleet/status-rules";
 import { mapDriver, mapTrip, mapVehicle } from "@/lib/fleet/mappers";
 import {
+  notifyByRoles,
   notifyTripStakeholders,
   recordTripUpdate,
 } from "@/lib/fleet/trip-events";
@@ -825,5 +828,50 @@ export async function markAllNotificationsRead(): Promise<ActionResult> {
     .is("read_at", null);
 
   if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function sendBroadcastNotification(
+  input: BroadcastNotificationInput
+): Promise<ActionResult> {
+  const auth = await requireSessionRole([
+    ROLES.FLEET_MANAGER,
+    ROLES.DISPATCHER,
+    ROLES.SAFETY_OFFICER,
+    ROLES.FINANCIAL_ANALYST,
+  ]);
+  if (!auth.ok) return { success: false, error: auth.error };
+
+  const parsed = broadcastNotificationSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: formatZodError(parsed.error) };
+  }
+
+  const supabase = await createClient();
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id")
+    .in("role", parsed.data.roles);
+
+  const recipientCount = (profiles ?? []).filter(
+    (profile) => profile.id !== auth.user.id
+  ).length;
+
+  if (recipientCount === 0) {
+    return {
+      success: false,
+      error: "No recipients found for the selected roles.",
+    };
+  }
+
+  await notifyByRoles(supabase, {
+    roles: parsed.data.roles,
+    title: parsed.data.title,
+    message: parsed.data.message,
+    link: parsed.data.link,
+    excludeUserId: auth.user.id,
+  });
+
+  revalidatePath("/notifications");
   return { success: true };
 }
