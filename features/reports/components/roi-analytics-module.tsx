@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import { ROLES } from "@/constants/roles";
 import { useSettingsStore } from "@/store/settings-store";
+import { exportFilter } from "@/lib/utils/export";
 import type { ExpenseLog, FuelLog, Trip, Vehicle } from "@/types/entities";
 
 interface RoiAnalyticsModuleProps {
@@ -117,14 +118,20 @@ export function RoiAnalyticsModule({
         description="Vehicle profitability from trips, fuel, and expenses vs acquisition cost"
         actions={
           <ExportButton
+            title="ROI Analytics Report"
             filename="roi-analytics"
             rows={rows}
             sheetName="ROI"
+            subtitle={`Amortization: ${amortizationPercent}% of acquisition cost`}
+            filters={[
+              exportFilter("Scope", "Active fleet vehicles"),
+              exportFilter("Amortization", `${amortizationPercent}%`),
+            ]}
             columns={[
               { header: "Vehicle", value: (r) => r.vehicle },
-              { header: "Revenue", value: (r) => r.revenue },
-              { header: "Operating Cost", value: (r) => r.cost },
-              { header: "Profit", value: (r) => r.profit },
+              { header: "Revenue", value: (r) => formatCurrency(r.revenue) },
+              { header: "Operating Cost", value: (r) => formatCurrency(r.cost) },
+              { header: "Profit", value: (r) => formatCurrency(r.profit) },
               { header: "ROI %", value: (r) => r.roi },
               { header: "Completed Trips", value: (r) => r.trips },
             ]}

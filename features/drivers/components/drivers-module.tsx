@@ -16,6 +16,7 @@ import { MANUAL_DRIVER_STATUSES } from "@/lib/fleet/status-rules";
 import { useSettingsStore } from "@/store/settings-store";
 import { useEntityTab } from "@/hooks/use-entity-tab";
 import { cn } from "@/lib/utils";
+import { exportFilter } from "@/lib/utils/export";
 import type { Driver, DriverStatus } from "@/types/entities";
 
 const STATUS_OPTIONS = [
@@ -133,9 +134,14 @@ export function DriversModule({
         actions={
         <div className="flex gap-2">
           <ExportButton
+            title="Driver Management Report"
             filename="drivers"
             rows={filtered}
             sheetName="Drivers"
+            filters={[
+              exportFilter("Search", search),
+              exportFilter("Status", statusFilter === "all" ? "All statuses" : statusFilter),
+            ]}
             columns={[
               { header: "Name", value: (r) => r.name },
               { header: "License", value: (r) => r.license_number },

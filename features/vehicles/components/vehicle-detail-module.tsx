@@ -14,6 +14,7 @@ import { VehicleFormDialog } from "@/features/vehicles/components/vehicle-form-d
 import { RetireVehicleButton } from "@/features/vehicles/components/retire-vehicle-button";
 import { updateVehicleStatus } from "@/lib/fleet/actions";
 import { fetchVehicleById } from "@/lib/fleet/client-queries";
+import { formatCurrency, formatNumber } from "@/lib/utils/format";
 import { MANUAL_VEHICLE_STATUSES } from "@/lib/fleet/status-rules";
 import type { Vehicle, VehicleStatus } from "@/types/entities";
 
@@ -75,15 +76,15 @@ export function VehicleDetailModule({
           { label: "Type", value: vehicle.vehicle_type },
           {
             label: "Max Capacity",
-            value: `${vehicle.max_load_capacity.toLocaleString()} kg`,
+            value: `${formatNumber(vehicle.max_load_capacity)} kg`,
           },
           {
             label: "Odometer",
-            value: `${vehicle.odometer.toLocaleString()} km`,
+            value: `${formatNumber(vehicle.odometer)} km`,
           },
           {
             label: "Acquisition Cost",
-            value: `₹${vehicle.acquisition_cost.toLocaleString()}`,
+            value: formatCurrency(vehicle.acquisition_cost),
           },
           { label: "Purchase Date", value: vehicle.purchase_date },
           {

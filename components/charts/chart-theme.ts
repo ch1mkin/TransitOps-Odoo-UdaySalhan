@@ -20,9 +20,7 @@ export const CHART_GRID = {
   vertical: false,
 };
 
-export function formatCurrency(value: number) {
-  return `₹${value.toLocaleString("en-IN")}`;
-}
+export { formatCurrency, formatCompactCurrency, formatNumber } from "@/lib/utils/format";
 
 export function formatCompactDate(date: string) {
   const parsed = new Date(date);

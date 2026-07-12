@@ -9,6 +9,8 @@ import { ModulePage } from "@/components/data/module-page";
 import { Button } from "@/components/ui/button";
 import { ExpenseFormDialog } from "@/features/expenses/components/expense-form-dialog";
 import { withinDateRange } from "@/lib/utils/date-filter";
+import { formatCurrency } from "@/lib/utils/format";
+import { exportFilter } from "@/lib/utils/export";
 import type { ExpenseLog, Vehicle } from "@/types/entities";
 
 interface ExpensesModuleProps {
@@ -44,7 +46,7 @@ export function ExpensesModule({
         key: "amount",
         header: "Amount (₹)",
         className: "text-right",
-        cell: (r) => r.amount.toLocaleString(),
+        cell: (r) => formatCurrency(r.amount),
       },
       { key: "date", header: "Date", cell: (r) => r.date },
     ],
@@ -72,14 +74,20 @@ export function ExpensesModule({
         actions={
           <div className="flex gap-2">
             <ExportButton
+              title="Expenses Report"
               filename="expenses"
               rows={filtered}
               sheetName="Expenses"
+              filters={[
+                exportFilter("Search", search),
+                exportFilter("From", dateFrom, "Any"),
+                exportFilter("To", dateTo, "Any"),
+              ]}
               columns={[
                 { header: "Vehicle", value: (r) => vehicleLabels[r.vehicle_id] ?? "" },
                 { header: "Category", value: (r) => r.category },
                 { header: "Description", value: (r) => r.description },
-                { header: "Amount", value: (r) => r.amount },
+                { header: "Amount", value: (r) => formatCurrency(r.amount) },
                 { header: "Date", value: (r) => r.date },
               ]}
             />

@@ -7,6 +7,7 @@ import { ModuleFilters } from "@/components/data/module-filters";
 import { ModulePage } from "@/components/data/module-page";
 import { StatusBadge } from "@/components/data/status-badge";
 import { isLicenseExpired } from "@/lib/fleet/trip-lifecycle";
+import { exportFilter } from "@/lib/utils/export";
 import { ROLES } from "@/constants/roles";
 import { useSettingsStore } from "@/store/settings-store";
 import type { Driver } from "@/types/entities";
@@ -96,9 +97,24 @@ export function LicenseMonitoringModule({ drivers }: LicenseMonitoringModuleProp
       description={`${stats.expired} expired · ${stats.expiring} expiring within ${warningDays} days · ${stats.valid} valid`}
       actions={
         <ExportButton
+          title="License Monitoring Report"
           filename="license-monitoring"
           rows={filtered}
           sheetName="Licenses"
+          subtitle={`Warning window: ${warningDays} days`}
+          filters={[
+            exportFilter("Search", search),
+            exportFilter(
+              "License Status",
+              filter === "all"
+                ? "All"
+                : filter === "expired"
+                  ? "Expired"
+                  : filter === "expiring"
+                    ? "Expiring soon"
+                    : "Valid"
+            ),
+          ]}
           columns={[
             { header: "Driver", value: (r) => r.name },
             { header: "License", value: (r) => r.license_number },

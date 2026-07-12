@@ -1,4 +1,5 @@
 import type { Driver, Trip, Vehicle } from "@/types/entities";
+import { formatNumber } from "@/lib/utils/format";
 
 export class TripValidationError extends Error {
   constructor(message: string) {
@@ -38,7 +39,7 @@ export function assertDriverAssignable(driver: Driver) {
 export function assertCargoCapacity(cargoWeight: number, vehicle: Vehicle) {
   if (cargoWeight > vehicle.max_load_capacity) {
     throw new TripValidationError(
-      `Cargo weight exceeds vehicle capacity (${vehicle.max_load_capacity.toLocaleString()} kg).`
+      `Cargo weight exceeds vehicle capacity (${formatNumber(vehicle.max_load_capacity)} kg).`
     );
   }
 }

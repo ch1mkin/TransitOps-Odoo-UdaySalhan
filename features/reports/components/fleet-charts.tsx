@@ -25,6 +25,8 @@ import {
   CHART_GRID,
   formatCompactDate,
   formatCurrency,
+  formatCompactCurrency,
+  formatNumber,
 } from "@/components/charts/chart-theme";
 import { ChartTooltip } from "@/components/charts/chart-tooltip";
 import { isLicenseExpired } from "@/lib/fleet/trip-lifecycle";
@@ -315,7 +317,7 @@ export function FleetCharts({
                 </defs>
                 <CartesianGrid {...CHART_GRID} />
                 <XAxis dataKey="month" {...CHART_AXIS} />
-                <YAxis {...CHART_AXIS} width={48} tickFormatter={(v) => `₹${v / 1000}k`} />
+                <YAxis {...CHART_AXIS} width={48} tickFormatter={formatCompactCurrency} />
                 <Tooltip content={<ChartTooltip valueFormatter={(v) => formatCurrency(v)} />} />
                 <Area
                   type="monotone"
@@ -515,7 +517,7 @@ export function FleetCharts({
                   content={
                     <ChartTooltip
                       valueFormatter={(v, key) =>
-                        key === "cost" ? formatCurrency(v) : `${v.toLocaleString()} L`
+                        key === "cost" ? formatCurrency(v) : `${formatNumber(v)} L`
                       }
                     />
                   }
@@ -548,7 +550,7 @@ export function FleetCharts({
                 </defs>
                 <CartesianGrid {...CHART_GRID} />
                 <XAxis dataKey="date" {...CHART_AXIS} />
-                <YAxis {...CHART_AXIS} width={48} tickFormatter={(v) => `₹${v / 1000}k`} />
+                <YAxis {...CHART_AXIS} width={48} tickFormatter={formatCompactCurrency} />
                 <Tooltip
                   content={
                     <ChartTooltip valueFormatter={(v) => formatCurrency(v)} />
@@ -579,7 +581,7 @@ export function FleetCharts({
                 <YAxis
                   {...CHART_AXIS}
                   width={52}
-                  tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
+                  tickFormatter={formatCompactCurrency}
                 />
                 <Tooltip
                   content={

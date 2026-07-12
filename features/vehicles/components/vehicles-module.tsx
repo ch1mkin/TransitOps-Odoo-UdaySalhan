@@ -13,6 +13,8 @@ import { ExportButton } from "@/components/data/export-button";
 import { VehicleFormDialog } from "@/features/vehicles/components/vehicle-form-dialog";
 import { updateVehicleStatus } from "@/lib/fleet/actions";
 import { MANUAL_VEHICLE_STATUSES } from "@/lib/fleet/status-rules";
+import { formatNumber } from "@/lib/utils/format";
+import { exportFilter } from "@/lib/utils/export";
 import { useEntityTab } from "@/hooks/use-entity-tab";
 import type { Vehicle, VehicleStatus } from "@/types/entities";
 
@@ -81,14 +83,14 @@ export function VehiclesModule({
         header: "Capacity (kg)",
         className: "text-right",
         sortValue: (row) => row.max_load_capacity,
-        cell: (row) => row.max_load_capacity.toLocaleString(),
+        cell: (row) => formatNumber(row.max_load_capacity),
       },
       {
         key: "odometer",
         header: "Odometer",
         className: "text-right",
         sortValue: (row) => row.odometer,
-        cell: (row) => `${row.odometer.toLocaleString()} km`,
+        cell: (row) => `${formatNumber(row.odometer)} km`,
       },
       {
         key: "status",
@@ -151,9 +153,15 @@ export function VehiclesModule({
         actions={
         <div className="flex gap-2">
           <ExportButton
+            title="Vehicle Registry Report"
             filename="vehicles"
             rows={filtered}
             sheetName="Vehicles"
+            filters={[
+              exportFilter("Search", search),
+              exportFilter("Status", statusFilter === "all" ? "All statuses" : statusFilter),
+              exportFilter("Type", typeFilter === "all" ? "All types" : typeFilter),
+            ]}
             columns={[
               { header: "Registration", value: (r) => r.registration_number },
               { header: "Name", value: (r) => r.vehicle_name },

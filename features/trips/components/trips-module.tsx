@@ -12,6 +12,8 @@ import { ExportButton } from "@/components/data/export-button";
 import { TripFormDialog } from "@/features/trips/components/trip-form-dialog";
 import { useEntityTab } from "@/hooks/use-entity-tab";
 import { getTripFilterDate, withinDateRange } from "@/lib/utils/date-filter";
+import { formatNumber } from "@/lib/utils/format";
+import { exportFilter } from "@/lib/utils/export";
 import type { Driver, Trip, Vehicle } from "@/types/entities";
 
 const STATUS_OPTIONS = [
@@ -96,13 +98,13 @@ export function TripsModule({
         key: "cargo",
         header: "Cargo (kg)",
         className: "text-right",
-        cell: (row) => row.cargo_weight.toLocaleString(),
+        cell: (row) => formatNumber(row.cargo_weight),
       },
       {
         key: "distance",
         header: "Distance (km)",
         className: "text-right",
-        cell: (row) => row.planned_distance.toLocaleString(),
+        cell: (row) => formatNumber(row.planned_distance),
       },
       {
         key: "status",
@@ -155,9 +157,20 @@ export function TripsModule({
         actions={
           <div className="flex gap-2">
             <ExportButton
+              title="Trips Report"
               filename="trips"
               rows={filtered}
               sheetName="Trips"
+              filters={[
+                exportFilter("Search", search),
+                exportFilter(
+                  "Status",
+                  statusFilter === "all" ? "All statuses" : statusFilter
+                ),
+                exportFilter("From", dateFrom, "Any"),
+                exportFilter("To", dateTo, "Any"),
+                exportFilter("View", viewMeta.title),
+              ]}
               columns={[
                 { header: "Trip No.", value: (r) => r.trip_number },
                 { header: "Source", value: (r) => r.source },

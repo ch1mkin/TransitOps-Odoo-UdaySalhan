@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { VehicleDocumentFormDialog } from "@/features/vehicles/components/vehicle-document-form-dialog";
 import { DocumentDownloadButton } from "@/features/vehicles/components/document-download-button";
 import { isLicenseExpired } from "@/lib/fleet/trip-lifecycle";
+import { exportFilter } from "@/lib/utils/export";
 import type { Vehicle, VehicleDocument } from "@/types/entities";
 
 const columns = (
@@ -92,9 +93,11 @@ export function VehicleDocumentsModule({
         actions={
           <div className="flex gap-2">
             <ExportButton
+              title="Vehicle Documents Report"
               filename="vehicle-documents"
               rows={filtered}
               sheetName="Documents"
+              filters={[exportFilter("Search", search)]}
               columns={[
                 { header: "Vehicle", value: (r) => vehicleLabels[r.vehicle_id] ?? "" },
                 { header: "Type", value: (r) => r.document_type },

@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { MaintenanceFormDialog } from "@/features/maintenance/components/maintenance-form-dialog";
 import { closeMaintenance } from "@/lib/fleet/actions";
+import { formatCurrency } from "@/lib/utils/format";
+import { exportFilter } from "@/lib/utils/export";
 import { withinDateRange } from "@/lib/utils/date-filter";
 import type { MaintenanceLog, Vehicle } from "@/types/entities";
 
@@ -69,7 +71,7 @@ export function MaintenanceModule({
         header: "Cost (₹)",
         className: "text-right",
         sortValue: (r) => r.cost,
-        cell: (r) => r.cost.toLocaleString(),
+        cell: (r) => formatCurrency(r.cost),
       },
       { key: "opened", header: "Opened", sortValue: (r) => r.opened_at, cell: (r) => r.opened_at },
       {
@@ -125,15 +127,22 @@ export function MaintenanceModule({
         actions={
           <div className="flex gap-2">
             <ExportButton
+              title="Maintenance Logs Report"
               filename="maintenance-logs"
               rows={filtered}
               sheetName="Maintenance"
+              filters={[
+                exportFilter("Search", search),
+                exportFilter("Status", status === "all" ? "All statuses" : status),
+                exportFilter("From", dateFrom, "Any"),
+                exportFilter("To", dateTo, "Any"),
+              ]}
               columns={[
                 { header: "Vehicle", value: (r) => vehicleLabels[r.vehicle_id] ?? "" },
                 { header: "Type", value: (r) => r.maintenance_type },
                 { header: "Description", value: (r) => r.description },
                 { header: "Service Center", value: (r) => r.service_center },
-                { header: "Cost", value: (r) => r.cost },
+                { header: "Cost", value: (r) => formatCurrency(r.cost) },
                 { header: "Opened", value: (r) => r.opened_at },
                 { header: "Status", value: (r) => r.status },
               ]}

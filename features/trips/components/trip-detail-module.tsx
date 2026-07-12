@@ -10,6 +10,7 @@ import { TruckLoaderSection } from "@/components/ui/truck-loader";
 import { TripLifecycleActions } from "@/features/trips/components/trip-lifecycle-actions";
 import { TripUpdatesTimeline } from "@/features/trips/components/trip-updates-timeline";
 import { fetchFleetLabels, fetchTripById } from "@/lib/fleet/client-queries";
+import { formatCurrency, formatNumber } from "@/lib/utils/format";
 import type { Trip, TripUpdate } from "@/types/entities";
 
 interface TripDetailModuleProps {
@@ -71,11 +72,11 @@ export function TripDetailModule({
           { label: "Driver", value: driverLabel },
           {
             label: "Cargo Weight",
-            value: `${trip.cargo_weight.toLocaleString()} kg`,
+            value: `${formatNumber(trip.cargo_weight)} kg`,
           },
           {
             label: "Planned Distance",
-            value: `${trip.planned_distance.toLocaleString()} km`,
+            value: `${formatNumber(trip.planned_distance)} km`,
           },
           {
             label: "Dispatch Time",
@@ -86,16 +87,16 @@ export function TripDetailModule({
           {
             label: "Actual Distance",
             value: trip.actual_distance
-              ? `${trip.actual_distance.toLocaleString()} km`
+              ? `${formatNumber(trip.actual_distance)} km`
               : "—",
           },
           {
             label: "Fuel Used",
-            value: trip.fuel_used != null ? `${trip.fuel_used.toLocaleString()} L` : "—",
+            value: trip.fuel_used != null ? `${formatNumber(trip.fuel_used)} L` : "—",
           },
           {
             label: "Revenue",
-            value: trip.revenue != null ? `₹${trip.revenue.toLocaleString()}` : "—",
+            value: trip.revenue != null ? formatCurrency(trip.revenue) : "—",
           },
           {
             label: "Completion Time",

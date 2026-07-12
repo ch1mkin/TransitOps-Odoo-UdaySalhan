@@ -16,6 +16,8 @@ import {
 import { FleetCharts } from "@/features/reports/components/fleet-charts";
 import { ROLES, type Role } from "@/constants/roles";
 import { computeAverageFuelEfficiency } from "@/lib/fleet/metrics";
+import { formatCurrency } from "@/lib/utils/format";
+import { exportFilter } from "@/lib/utils/export";
 import { isLicenseExpired } from "@/lib/fleet/trip-lifecycle";
 import { useEntityTab } from "@/hooks/use-entity-tab";
 import type { Driver, ExpenseLog, FuelLog, MaintenanceLog, Trip, Vehicle } from "@/types/entities";
@@ -165,16 +167,16 @@ export function DashboardModule({
         .reduce((sum, t) => sum + (t.revenue ?? 0), 0);
 
       return [
-        { label: "Fuel Cost", value: `₹${fuelCost.toLocaleString()}` },
-        { label: "Total Expenses", value: `₹${expenseTotal.toLocaleString()}` },
-        { label: "Maintenance Cost", value: `₹${maintenanceCost.toLocaleString()}` },
+        { label: "Fuel Cost", value: formatCurrency(fuelCost) },
+        { label: "Total Expenses", value: formatCurrency(expenseTotal) },
+        { label: "Maintenance Cost", value: formatCurrency(maintenanceCost) },
         { label: "Avg Fuel Efficiency", value: `${fuelEfficiency} km/L` },
         {
           label: "Operational Cost",
-          value: `₹${(fuelCost + expenseTotal + maintenanceCost).toLocaleString()}`,
+          value: formatCurrency(fuelCost + expenseTotal + maintenanceCost),
         },
         { label: "Completed Trips", value: String(completedTrips) },
-        { label: "Trip Revenue", value: `₹${revenue.toLocaleString()}` },
+        { label: "Trip Revenue", value: formatCurrency(revenue) },
       ];
     }
 
@@ -207,8 +209,8 @@ export function DashboardModule({
       { label: "Completed Trips", value: String(completedTrips) },
       { label: "Fleet Utilization", value: `${utilization}%` },
       { label: "Avg Fuel Efficiency", value: `${fuelEfficiency} km/L` },
-      { label: "Maintenance Cost", value: `₹${maintenanceCost.toLocaleString()}` },
-      { label: "Operational Cost", value: `₹${(fuelCost + expenseTotal + maintenanceCost).toLocaleString()}` },
+      { label: "Maintenance Cost", value: formatCurrency(maintenanceCost) },
+      { label: "Operational Cost", value: formatCurrency(fuelCost + expenseTotal + maintenanceCost) },
     ];
   }, [vehicles, drivers, trips, fuelLogs, expenses, maintenanceLogs, role]);
 
@@ -253,9 +255,11 @@ export function DashboardModule({
           <p className="mt-1 text-sm text-muted-foreground">{dashboardCopy.description}</p>
         </div>
         <ExportButton
+          title={`${dashboardCopy.title} Activity Report`}
           filename="dashboard-activity"
           rows={filtered}
           sheetName="Activity"
+          filters={[exportFilter("Search", search)]}
           columns={[
             { header: "Module", value: (r) => r.module },
             { header: "Reference", value: (r) => r.reference },

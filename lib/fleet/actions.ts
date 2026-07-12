@@ -51,6 +51,7 @@ import {
 } from "@/lib/fleet/trip-events";
 import type { DriverStatus, VehicleStatus } from "@/types/entities";
 import { createClient } from "@/lib/supabase/server";
+import { formatCurrency } from "@/lib/utils/format";
 
 type ActionResult =
   | { success: true; id?: string }
@@ -294,7 +295,7 @@ export async function completeTrip(
       tripId,
       actorId: auth.user.id,
       eventType: "completed",
-      message: `Trip ${trip.trip_number} completed — ${parsed.data.actual_distance} km, ₹${parsed.data.revenue.toLocaleString()} revenue.`,
+      message: `Trip ${trip.trip_number} completed — ${parsed.data.actual_distance} km, ${formatCurrency(parsed.data.revenue)} revenue.`,
     });
 
     await notifyTripStakeholders(supabase, {

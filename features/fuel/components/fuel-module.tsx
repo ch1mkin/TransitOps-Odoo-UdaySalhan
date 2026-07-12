@@ -9,6 +9,8 @@ import { ModulePage } from "@/components/data/module-page";
 import { Button } from "@/components/ui/button";
 import { FuelFormDialog } from "@/features/fuel/components/fuel-form-dialog";
 import { withinDateRange } from "@/lib/utils/date-filter";
+import { formatCurrency, formatNumber } from "@/lib/utils/format";
+import { exportFilter } from "@/lib/utils/export";
 import type { FuelLog, Vehicle } from "@/types/entities";
 
 interface FuelModuleProps {
@@ -42,19 +44,19 @@ export function FuelModule({
         key: "liters",
         header: "Liters",
         className: "text-right",
-        cell: (r) => r.liters.toLocaleString(),
+        cell: (r) => formatNumber(r.liters),
       },
       {
         key: "cost",
         header: "Cost (₹)",
         className: "text-right",
-        cell: (r) => r.cost.toLocaleString(),
+        cell: (r) => formatCurrency(r.cost),
       },
       {
         key: "odometer",
         header: "Odometer",
         className: "text-right",
-        cell: (r) => `${r.odometer.toLocaleString()} km`,
+        cell: (r) => `${formatNumber(r.odometer)} km`,
       },
       { key: "date", header: "Date", cell: (r) => r.date },
     ],
@@ -79,14 +81,20 @@ export function FuelModule({
         actions={
           <div className="flex gap-2">
             <ExportButton
+              title="Fuel Logs Report"
               filename="fuel-logs"
               rows={filtered}
               sheetName="Fuel"
+              filters={[
+                exportFilter("Search", search),
+                exportFilter("From", dateFrom, "Any"),
+                exportFilter("To", dateTo, "Any"),
+              ]}
               columns={[
                 { header: "Vehicle", value: (r) => vehicleLabels[r.vehicle_id] ?? "" },
-                { header: "Liters", value: (r) => r.liters },
-                { header: "Cost", value: (r) => r.cost },
-                { header: "Odometer", value: (r) => r.odometer },
+                { header: "Liters", value: (r) => formatNumber(r.liters) },
+                { header: "Cost", value: (r) => formatCurrency(r.cost) },
+                { header: "Odometer", value: (r) => formatNumber(r.odometer) },
                 { header: "Date", value: (r) => r.date },
               ]}
             />

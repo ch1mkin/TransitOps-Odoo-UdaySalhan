@@ -1,6 +1,6 @@
 "use client";
 
-import { formatCurrency } from "@/components/charts/chart-theme";
+import { formatCurrency, formatNumber } from "@/lib/utils/format";
 
 interface ChartTooltipProps {
   active?: boolean;
@@ -32,7 +32,7 @@ export function ChartTooltip({
             entry.dataKey === "revenue" ||
             entry.dataKey === "profit"
               ? formatCurrency(value)
-              : value.toLocaleString("en-IN"));
+              : formatNumber(value));
 
           return (
             <div key={entry.dataKey ?? entry.name} className="flex items-center gap-2">
