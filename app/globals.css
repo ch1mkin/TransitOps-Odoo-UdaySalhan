@@ -146,6 +146,51 @@
       0 8px 10px -6px rgb(0 0 0 / 0.08);
   }
 
+  @keyframes loader-truck-move {
+    0%,
+    100% {
+      transform: translateX(-50%) translateY(0);
+    }
+    50% {
+      transform: translateX(-50%) translateY(-1px);
+    }
+  }
+
+  @keyframes loader-dash-scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-48px);
+    }
+  }
+
+  @keyframes loader-road-pulse {
+    0%,
+    100% {
+      opacity: 0.45;
+      transform: scaleX(0.35);
+    }
+    50% {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+  }
+
+  .loader-truck {
+    transform: translateX(-50%);
+    animation: loader-truck-move 1.6s ease-in-out infinite;
+  }
+
+  .loader-dashes {
+    animation: loader-dash-scroll 0.9s linear infinite;
+  }
+
+  .loader-road-fill {
+    transform-origin: left center;
+    animation: loader-road-pulse 1.6s ease-in-out infinite;
+  }
+
   @keyframes loader-bar-travel {
     0% {
       transform: translateX(-110%);
@@ -329,6 +374,9 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .loader-truck,
+    .loader-dashes,
+    .loader-road-fill,
     .loader-bar-travel,
     .walkthrough-spotlight,
     .walkthrough-arrow,

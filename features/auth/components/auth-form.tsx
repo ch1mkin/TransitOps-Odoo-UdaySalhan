@@ -8,9 +8,8 @@ import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import {
-  AuthMarketingLeft,
   AuthMarketingMobile,
-  AuthMarketingRight,
+  AuthMarketingPanel,
 } from "@/components/marketing/auth-side-panels";
 import { Button } from "@/components/ui/button";
 import { TruckLoader, TruckLoaderInline } from "@/components/ui/truck-loader";
@@ -307,11 +306,11 @@ export function AuthForm() {
           )}
         />
 
-        <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center">
+        <div className="relative mx-auto flex w-full max-w-4xl flex-col items-center">
           <AuthMarketingMobile mode={isLogin ? "login" : "register"} />
 
-          <div className="grid w-full items-stretch gap-6 lg:min-h-[calc(100dvh-5rem)] lg:items-center lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)_minmax(0,1fr)]">
-            <AuthMarketingLeft mode={isLogin ? "login" : "register"} />
+          <div className="grid w-full items-stretch gap-6 lg:min-h-[calc(100dvh-5rem)] lg:items-center lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
+            <AuthMarketingPanel mode={isLogin ? "login" : "register"} />
 
             <Card
               className={cn(
@@ -584,8 +583,6 @@ export function AuthForm() {
             </form>
           </CardContent>
             </Card>
-
-            <AuthMarketingRight mode={isLogin ? "login" : "register"} />
           </div>
         </div>
       </div>
