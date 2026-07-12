@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { changePasswordSchema } from "@/schemas/auth";
 import { createClient } from "@/lib/supabase/server";
 
 const profileSchema = z.object({
@@ -37,6 +38,49 @@ export async function updateProfileName(input: {
   }
 
   revalidatePath("/", "layout");
+  revalidatePath("/profile");
+  return { success: true };
+}
+
+export async function updateProfilePassword(input: {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}): Promise<ActionResult> {
+  const parsed = changePasswordSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid password data",
+    };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user?.email) {
+    return { success: false, error: "You must be signed in." };
+  }
+
+  const { error: verifyError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: parsed.data.currentPassword,
+  });
+
+  if (verifyError) {
+    return { success: false, error: "Current password is incorrect." };
+  }
+
+  const { error: updateError } = await supabase.auth.updateUser({
+    password: parsed.data.newPassword,
+  });
+
+  if (updateError) {
+    return { success: false, error: updateError.message };
+  }
+
   revalidatePath("/profile");
   return { success: true };
 }

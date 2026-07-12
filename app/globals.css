@@ -191,19 +191,6 @@
     animation: loader-road-pulse 1.6s ease-in-out infinite;
   }
 
-  @keyframes loader-bar-travel {
-    0% {
-      transform: translateX(-110%);
-    }
-    100% {
-      transform: translateX(320%);
-    }
-  }
-
-  .loader-bar-travel {
-    animation: loader-bar-travel 1.35s ease-in-out infinite;
-  }
-
   .ambient-particles {
     opacity: 0.55;
   }
@@ -323,19 +310,6 @@
     );
   }
 
-  .welcome-showcase-card {
-    position: relative;
-  }
-
-  .welcome-showcase::before {
-    content: "";
-    position: absolute;
-    inset: -18%;
-    border-radius: 9999px;
-    background: radial-gradient(circle, rgba(37, 99, 235, 0.16), transparent 68%);
-    filter: blur(18px);
-  }
-
   .auth-marketing-panel {
     min-height: 100%;
   }
@@ -377,7 +351,6 @@
     .loader-truck,
     .loader-dashes,
     .loader-road-fill,
-    .loader-bar-travel,
     .walkthrough-spotlight,
     .walkthrough-arrow,
     .ambient-orb {

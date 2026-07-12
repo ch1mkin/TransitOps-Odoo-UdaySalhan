@@ -5,6 +5,7 @@ import { ROLE_LABELS, ROLES, type Role } from "@/constants/roles";
 import { EntityDetailModule } from "@/components/data/entity-detail-module";
 import { TruckLoaderSection } from "@/components/ui/truck-loader";
 import { ProfileEditForm } from "@/features/profile/components/profile-edit-form";
+import { ProfilePasswordForm } from "@/features/profile/components/profile-password-form";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types";
 
@@ -86,15 +87,15 @@ export function ProfileTabModule({
           { label: "Full Name", value: displayName },
           { label: "Email", value: email },
           { label: "Role", value: ROLE_LABELS[displayRole] },
-          {
-            label: "Workspace",
-            value: "Pinned tab — survives section navigation",
-          },
+          { label: "Role", value: ROLE_LABELS[displayRole] },
         ]}
       />
-      {!compact && (
-        <ProfileEditForm fullName={displayName} email={email} />
-      )}
+      {!compact ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <ProfileEditForm fullName={displayName} email={email} />
+          <ProfilePasswordForm />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -34,7 +34,7 @@ export function ProfileEditForm({ fullName, email }: ProfileEditFormProps) {
     <div className="rounded-xl border border-border bg-card p-4 workspace-shadow">
       <h2 className="text-sm font-semibold">Edit profile</h2>
       <p className="mt-1 text-xs text-muted-foreground">
-        Update your display name. Change role in Supabase Table Editor.
+        Update your display name used across the workspace.
       </p>
       <div className="mt-4 space-y-3">
         <div className="space-y-1.5">

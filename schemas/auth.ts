@@ -48,6 +48,23 @@ export const otpSchema = z.object({
 
 export type OtpFormValues = z.infer<typeof otpSchema>;
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: passwordField,
+    confirmPassword: z.string().min(1, "Please confirm your new password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  })
+  .refine((data) => data.currentPassword !== data.newPassword, {
+    message: "New password must be different from your current password",
+    path: ["newPassword"],
+  });
+
+export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>;
+
 export const PASSWORD_REQUIREMENTS = [
   { id: "length", label: "At least 8 characters", test: (v: string) => v.length >= 8 },
   { id: "upper", label: "One uppercase letter", test: (v: string) => /[A-Z]/.test(v) },
