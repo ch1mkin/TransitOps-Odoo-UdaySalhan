@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Bell,
   Car,
   ClipboardList,
   FileText,
@@ -33,6 +34,12 @@ export const NAV_ITEMS: NavItem[] = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+    roles: ALL_ROLES,
+  },
+  {
+    title: "Notifications",
+    href: "/notifications",
+    icon: Bell,
     roles: ALL_ROLES,
   },
   // Fleet Manager

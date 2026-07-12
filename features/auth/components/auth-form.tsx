@@ -8,7 +8,7 @@ import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
-import { TruckLoader, TruckLoaderInline } from "@/components/ui/truck-loader";
+import { TruckLoaderInline } from "@/components/ui/truck-loader";
 import {
   Card,
   CardContent,
@@ -21,14 +21,20 @@ import { Label } from "@/components/ui/label";
 import { ROLE_OPTIONS } from "@/constants/roles";
 import { WALKTHROUGH_PENDING_KEY } from "@/constants/walkthrough";
 import { MinimalConfetti } from "@/features/auth/components/minimal-confetti";
+import { OtpInput } from "@/features/auth/components/otp-input";
 import {
   PasswordMatchIndicator,
   PasswordRequirements,
 } from "@/features/auth/components/password-feedback";
+import {
+  sendLoginOtp,
+  sendRegisterOtp,
+  verifyLoginOtp,
+  verifyRegisterOtp,
+} from "@/lib/auth/auth-otp-actions";
 import { createClient } from "@/lib/supabase/client";
 import {
   getSupabaseEnvErrorMessage,
-  mapSupabaseAuthError,
 } from "@/lib/supabase/env";
 import {
   loginSchema,
@@ -45,14 +51,20 @@ function getSupabaseClient() {
   }
 }
 
+type AuthStep = "credentials" | "verify";
+
 export function AuthForm() {
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<"login" | "register">("login");
+  const [step, setStep] = useState<AuthStep>("credentials");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [pendingLogin, setPendingLogin] = useState<LoginFormValues | null>(null);
+  const [pendingRegister, setPendingRegister] = useState<RegisterFormValues | null>(null);
   const submittingRef = useRef(false);
 
   const loginForm = useForm<LoginFormValues>({
@@ -74,8 +86,10 @@ export function AuthForm() {
   });
 
   const isLogin = mode === "login";
+  const isVerifyStep = step === "verify";
   const registerPassword = registerForm.watch("password");
   const registerConfirmPassword = registerForm.watch("confirmPassword");
+  const verifyEmail = isLogin ? pendingLogin?.email : pendingRegister?.email;
 
   useEffect(() => {
     if (searchParams.get("mode") === "register") {
@@ -92,6 +106,13 @@ export function AuthForm() {
     }
   }, []);
 
+  const resetVerification = () => {
+    setStep("credentials");
+    setOtpCode("");
+    setPendingLogin(null);
+    setPendingRegister(null);
+  };
+
   const completeRegistration = async (email: string, password: string) => {
     const supabase = getSupabaseClient();
     await supabase.auth.signOut();
@@ -103,6 +124,7 @@ export function AuthForm() {
       loginForm.setValue("email", email);
       loginForm.setValue("password", password);
       registerForm.reset();
+      resetVerification();
       setMode("login");
       toast.success("Account created! Sign in to enter your workspace.");
     }, 1500);
@@ -114,22 +136,20 @@ export function AuthForm() {
     setLoading(true);
 
     try {
-      const supabase = getSupabaseClient();
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: values.email.trim(),
-        password: values.password,
-      });
-
-      if (data.session) {
-        toast.success("Welcome back");
-        sessionStorage.setItem(WALKTHROUGH_PENDING_KEY, "1");
-        window.location.assign("/dashboard");
+      const result = await sendLoginOtp(values);
+      if (!result.success) {
+        toast.error(result.error ?? "Could not send verification code.");
         return;
       }
 
-      if (error) {
-        toast.error(mapSupabaseAuthError(error.message));
-      }
+      setPendingLogin(values);
+      setOtpCode("");
+      setStep("verify");
+      toast.success(
+        result.devCode
+          ? `Verification code sent. Dev code: ${result.devCode}`
+          : "Verification code sent to your email."
+      );
     } catch (error) {
       toast.error(getSupabaseEnvErrorMessage(error));
     } finally {
@@ -144,31 +164,108 @@ export function AuthForm() {
     setLoading(true);
 
     try {
-      const supabase = getSupabaseClient();
-      const { data, error } = await supabase.auth.signUp({
-        email: values.email.trim(),
-        password: values.password,
-        options: {
-          data: {
-            full_name: values.fullName,
-            role: values.role,
-          },
-        },
-      });
-
-      if (error) {
-        toast.error(mapSupabaseAuthError(error.message));
+      const result = await sendRegisterOtp(values);
+      if (!result.success) {
+        toast.error(result.error ?? "Could not send verification code.");
         return;
       }
 
-      if (!data.user) {
-        toast.error("Registration failed. Please try again.");
-        return;
-      }
-
-      await completeRegistration(values.email.trim(), values.password);
+      setPendingRegister(values);
+      setOtpCode("");
+      setStep("verify");
+      toast.success(
+        result.devCode
+          ? `Verification code sent. Dev code: ${result.devCode}`
+          : "Verification code sent to your email."
+      );
     } catch (error) {
       toast.error(getSupabaseEnvErrorMessage(error));
+    } finally {
+      setLoading(false);
+      submittingRef.current = false;
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (submittingRef.current || otpCode.length !== 4) return;
+    submittingRef.current = true;
+    setLoading(true);
+
+    try {
+      if (isLogin && pendingLogin) {
+        const result = await verifyLoginOtp({
+          ...pendingLogin,
+          code: otpCode,
+        });
+
+        if (!result.success) {
+          toast.error(result.error ?? "Verification failed.");
+          return;
+        }
+
+        toast.success("Welcome back");
+        sessionStorage.setItem(WALKTHROUGH_PENDING_KEY, "1");
+        window.location.assign("/dashboard");
+        return;
+      }
+
+      if (!isLogin && pendingRegister) {
+        const result = await verifyRegisterOtp({
+          ...pendingRegister,
+          code: otpCode,
+        });
+
+        if (!result.success) {
+          toast.error(result.error ?? "Verification failed.");
+          return;
+        }
+
+        await completeRegistration(pendingRegister.email.trim(), pendingRegister.password);
+        return;
+      }
+
+      toast.error("Session expired. Please start again.");
+      resetVerification();
+    } catch (error) {
+      toast.error(getSupabaseEnvErrorMessage(error));
+    } finally {
+      setLoading(false);
+      submittingRef.current = false;
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setLoading(true);
+
+    try {
+      if (isLogin && pendingLogin) {
+        const result = await sendLoginOtp(pendingLogin);
+        if (!result.success) {
+          toast.error(result.error ?? "Could not resend code.");
+          return;
+        }
+        toast.success(
+          result.devCode
+            ? `New code sent. Dev code: ${result.devCode}`
+            : "A new verification code was sent."
+        );
+        return;
+      }
+
+      if (!isLogin && pendingRegister) {
+        const result = await sendRegisterOtp(pendingRegister);
+        if (!result.success) {
+          toast.error(result.error ?? "Could not resend code.");
+          return;
+        }
+        toast.success(
+          result.devCode
+            ? `New code sent. Dev code: ${result.devCode}`
+            : "A new verification code was sent."
+        );
+      }
     } finally {
       setLoading(false);
       submittingRef.current = false;
@@ -191,9 +288,11 @@ export function AuthForm() {
             </div>
             <CardTitle className="text-2xl">TransitOps</CardTitle>
             <CardDescription>
-              {isLogin
-                ? "Sign in to your transport operations workspace"
-                : "Create your TransitOps account"}
+              {isVerifyStep
+                ? `Enter the 4-digit code sent to ${verifyEmail ?? "your email"}`
+                : isLogin
+                  ? "Sign in to your transport operations workspace"
+                  : "Create your TransitOps account"}
             </CardDescription>
           </CardHeader>
 
@@ -204,197 +303,240 @@ export function AuthForm() {
                 <div>
                   <p className="font-medium">Supabase configuration error</p>
                   <p className="mt-1 text-destructive/90">{configError}</p>
-                  <p className="mt-2 text-destructive/80">
-                    Fix <code className="rounded bg-destructive/10 px-1">.env</code>{" "}
-                    using <code className="rounded bg-destructive/10 px-1">.env.example</code>, then restart{" "}
-                    <code className="rounded bg-destructive/10 px-1">npm run dev</code>.
-                  </p>
                 </div>
               </div>
             )}
 
-            <div className="mb-6 flex rounded-lg bg-muted p-1">
-              <button
-                type="button"
-                onClick={() => setMode("login")}
-                className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
-                  isLogin
-                    ? "bg-card text-foreground workspace-shadow"
-                    : "text-muted-foreground"
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => setMode("register")}
-                className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
-                  !isLogin
-                    ? "bg-card text-foreground workspace-shadow"
-                    : "text-muted-foreground"
-                }`}
-              >
-                Create Account
-              </button>
-            </div>
-
-            <form onSubmit={onSubmit} className="space-y-4">
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="fullName">Full Name</Label>
-                  <Input
-                    id="fullName"
-                    placeholder="Rajesh Kumar"
-                    {...registerForm.register("fullName")}
-                  />
-                  {registerForm.formState.errors.fullName && (
-                    <p className="text-xs text-destructive">
-                      {registerForm.formState.errors.fullName.message}
-                    </p>
+            {isVerifyStep ? (
+              <div className="space-y-5">
+                <OtpInput value={otpCode} onChange={setOtpCode} disabled={loading} />
+                <Button
+                  type="button"
+                  className="w-full"
+                  disabled={loading || otpCode.length !== 4 || Boolean(configError)}
+                  onClick={() => void handleVerifyOtp()}
+                >
+                  {loading ? (
+                    <span className="inline-flex items-center gap-2">
+                      <TruckLoaderInline />
+                      Verifying…
+                    </span>
+                  ) : (
+                    "Verify and continue"
                   )}
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="rajesh.kumar@transitops.in"
-                  {...(isLogin
-                    ? loginForm.register("email")
-                    : registerForm.register("email"))}
-                />
-                {(isLogin
-                  ? loginForm.formState.errors.email
-                  : registerForm.formState.errors.email) && (
-                  <p className="text-xs text-destructive">
-                    {(isLogin
-                      ? loginForm.formState.errors.email
-                      : registerForm.formState.errors.email
-                    )?.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    {...(isLogin
-                      ? loginForm.register("password")
-                      : registerForm.register("password"))}
-                  />
+                </Button>
+                <div className="flex items-center justify-between text-sm">
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={resetVerification}
                   >
-                    {showPassword ? (
-                      <EyeOff className="size-4" />
-                    ) : (
-                      <Eye className="size-4" />
-                    )}
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    className="text-accent hover:underline"
+                    disabled={loading}
+                    onClick={() => void handleResendOtp()}
+                  >
+                    Resend code
                   </button>
                 </div>
-                {(isLogin
-                  ? loginForm.formState.errors.password
-                  : registerForm.formState.errors.password) && (
-                  <p className="text-xs text-destructive">
-                    {(isLogin
-                      ? loginForm.formState.errors.password
-                      : registerForm.formState.errors.password
-                    )?.message}
-                  </p>
-                )}
-                {!isLogin && (
-                  <PasswordRequirements password={registerPassword ?? ""} />
-                )}
               </div>
+            ) : (
+              <>
+                <div className="mb-6 flex rounded-lg bg-muted p-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("login");
+                      resetVerification();
+                    }}
+                    className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
+                      isLogin
+                        ? "bg-card text-foreground workspace-shadow"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("register");
+                      resetVerification();
+                    }}
+                    className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors ${
+                      !isLogin
+                        ? "bg-card text-foreground workspace-shadow"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    Create Account
+                  </button>
+                </div>
 
-              {!isLogin && (
-                <>
+                <form onSubmit={onSubmit} className="space-y-4">
+                  {!isLogin && (
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Full Name</Label>
+                      <Input
+                        id="fullName"
+                        placeholder="Rajesh Kumar"
+                        {...registerForm.register("fullName")}
+                      />
+                      {registerForm.formState.errors.fullName && (
+                        <p className="text-xs text-destructive">
+                          {registerForm.formState.errors.fullName.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="rajesh.kumar@transitops.in"
+                      {...(isLogin
+                        ? loginForm.register("email")
+                        : registerForm.register("email"))}
+                    />
+                    {(isLogin
+                      ? loginForm.formState.errors.email
+                      : registerForm.formState.errors.email) && (
+                      <p className="text-xs text-destructive">
+                        {(isLogin
+                          ? loginForm.formState.errors.email
+                          : registerForm.formState.errors.email
+                        )?.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
                     <div className="relative">
                       <Input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? "text" : "password"}
+                        id="password"
+                        type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
-                        {...registerForm.register("confirmPassword")}
+                        {...(isLogin
+                          ? loginForm.register("password")
+                          : registerForm.register("password"))}
                       />
                       <button
                         type="button"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
+                        onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        aria-label={
-                          showConfirmPassword
-                            ? "Hide confirm password"
-                            : "Show confirm password"
-                        }
+                        aria-label={showPassword ? "Hide password" : "Show password"}
                       >
-                        {showConfirmPassword ? (
+                        {showPassword ? (
                           <EyeOff className="size-4" />
                         ) : (
                           <Eye className="size-4" />
                         )}
                       </button>
                     </div>
-                    <PasswordMatchIndicator
-                      password={registerPassword ?? ""}
-                      confirmPassword={registerConfirmPassword ?? ""}
-                    />
-                    {registerForm.formState.errors.confirmPassword && (
+                    {(isLogin
+                      ? loginForm.formState.errors.password
+                      : registerForm.formState.errors.password) && (
                       <p className="text-xs text-destructive">
-                        {registerForm.formState.errors.confirmPassword.message}
+                        {(isLogin
+                          ? loginForm.formState.errors.password
+                          : registerForm.formState.errors.password
+                        )?.message}
                       </p>
+                    )}
+                    {!isLogin && (
+                      <PasswordRequirements password={registerPassword ?? ""} />
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Role</Label>
-                    <select
-                      id="role"
-                      className="flex h-9 w-full rounded-lg border border-input bg-card px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      {...registerForm.register("role")}
-                    >
-                      <option value="">Select your role</option>
-                      {ROLE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                    {registerForm.formState.errors.role && (
-                      <p className="text-xs text-destructive">
-                        {registerForm.formState.errors.role.message}
-                      </p>
-                    )}
-                  </div>
-                </>
-              )}
+                  {!isLogin && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="confirmPassword">Confirm Password</Label>
+                        <div className="relative">
+                          <Input
+                            id="confirmPassword"
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            {...registerForm.register("confirmPassword")}
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            aria-label={
+                              showConfirmPassword
+                                ? "Hide confirm password"
+                                : "Show confirm password"
+                            }
+                          >
+                            {showConfirmPassword ? (
+                              <EyeOff className="size-4" />
+                            ) : (
+                              <Eye className="size-4" />
+                            )}
+                          </button>
+                        </div>
+                        <PasswordMatchIndicator
+                          password={registerPassword ?? ""}
+                          confirmPassword={registerConfirmPassword ?? ""}
+                        />
+                        {registerForm.formState.errors.confirmPassword && (
+                          <p className="text-xs text-destructive">
+                            {registerForm.formState.errors.confirmPassword.message}
+                          </p>
+                        )}
+                      </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading || Boolean(configError) || showConfetti}
-            >
-              {loading ? (
-                <span className="inline-flex items-center gap-2">
-                  <TruckLoaderInline />
-                  {isLogin ? "Signing in…" : "Creating account…"}
-                </span>
-              ) : (
-                (isLogin ? "Sign In" : "Create Account")
-              )}
-            </Button>
-            </form>
+                      <div className="space-y-2">
+                        <Label htmlFor="role">Role</Label>
+                        <select
+                          id="role"
+                          className="flex h-9 w-full rounded-lg border border-input bg-card px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          {...registerForm.register("role")}
+                        >
+                          <option value="">Select your role</option>
+                          {ROLE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                        {registerForm.formState.errors.role && (
+                          <p className="text-xs text-destructive">
+                            {registerForm.formState.errors.role.message}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={loading || Boolean(configError) || showConfetti}
+                  >
+                    {loading ? (
+                      <span className="inline-flex items-center gap-2">
+                        <TruckLoaderInline />
+                        {isLogin ? "Sending code…" : "Sending code…"}
+                      </span>
+                    ) : isLogin ? (
+                      "Continue to verification"
+                    ) : (
+                      "Continue to verification"
+                    )}
+                  </Button>
+                </form>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -4,6 +4,12 @@ interface SendEmailInput {
   html: string;
 }
 
+interface SendOtpEmailInput {
+  to: string;
+  code: string;
+  purpose: "login" | "register";
+}
+
 export async function sendTransactionalEmail(input: SendEmailInput) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
@@ -32,4 +38,20 @@ export async function sendTransactionalEmail(input: SendEmailInput) {
   }
 
   return { sent: true as const };
+}
+
+export async function sendOtpEmail(input: SendOtpEmailInput) {
+  const actionLabel = input.purpose === "login" ? "sign in" : "registration";
+
+  return sendTransactionalEmail({
+    to: input.to,
+    subject: `TransitOps verification code: ${input.code}`,
+    html: `
+      <div style="font-family:Inter,Arial,sans-serif;line-height:1.5;color:#111827">
+        <p>Use this code to ${actionLabel} to TransitOps:</p>
+        <p style="font-size:32px;font-weight:700;letter-spacing:8px;margin:16px 0">${input.code}</p>
+        <p style="color:#6b7280;font-size:14px">This code expires in 10 minutes. If you did not request it, you can ignore this email.</p>
+      </div>
+    `,
+  });
 }

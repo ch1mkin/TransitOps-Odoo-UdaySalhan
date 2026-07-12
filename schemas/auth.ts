@@ -39,6 +39,15 @@ export const registerSchema = z
 export type LoginFormValues = z.infer<typeof loginSchema>;
 export type RegisterFormValues = z.infer<typeof registerSchema>;
 
+export const otpSchema = z.object({
+  code: z
+    .string()
+    .length(4, "Enter the 4-digit verification code")
+    .regex(/^\d{4}$/, "Verification code must be 4 digits"),
+});
+
+export type OtpFormValues = z.infer<typeof otpSchema>;
+
 export const PASSWORD_REQUIREMENTS = [
   { id: "length", label: "At least 8 characters", test: (v: string) => v.length >= 8 },
   { id: "upper", label: "One uppercase letter", test: (v: string) => /[A-Z]/.test(v) },

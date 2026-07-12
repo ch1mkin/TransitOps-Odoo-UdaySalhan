@@ -2,6 +2,7 @@ import { ROLES, type Role } from "@/constants/roles";
 
 export type FleetModule =
   | "dashboard"
+  | "notifications"
   | "vehicles"
   | "vehicle_documents"
   | "drivers"
@@ -20,6 +21,7 @@ export type FleetModule =
 const ROLE_MODULES: Record<Role, FleetModule[]> = {
   [ROLES.FLEET_MANAGER]: [
     "dashboard",
+    "notifications",
     "vehicles",
     "vehicle_documents",
     "maintenance",
@@ -29,6 +31,7 @@ const ROLE_MODULES: Record<Role, FleetModule[]> = {
   ],
   [ROLES.DISPATCHER]: [
     "dashboard",
+    "notifications",
     "trips",
     "trips_active",
     "trips_history",
@@ -37,6 +40,7 @@ const ROLE_MODULES: Record<Role, FleetModule[]> = {
   ],
   [ROLES.SAFETY_OFFICER]: [
     "dashboard",
+    "notifications",
     "drivers",
     "license_monitoring",
     "reports",
@@ -45,6 +49,7 @@ const ROLE_MODULES: Record<Role, FleetModule[]> = {
   ],
   [ROLES.FINANCIAL_ANALYST]: [
     "dashboard",
+    "notifications",
     "fuel",
     "expenses",
     "reports",
@@ -137,6 +142,7 @@ export function pathnameToModule(pathname: string): FleetModule | null {
   const base = pathname.split("?")[0];
 
   if (base === "/dashboard") return "dashboard";
+  if (base === "/notifications") return "notifications";
   if (base === "/vehicle-documents") return "vehicle_documents";
   if (base === "/license-monitoring") return "license_monitoring";
   if (base === "/trips/active") return "trips_active";

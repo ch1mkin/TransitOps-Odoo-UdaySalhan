@@ -83,7 +83,7 @@ export async function syncLicenseExpiryNotifications(options?: {
   const { data: recipients } = await supabase
     .from("profiles")
     .select("id, email")
-    .in("role", [ROLES.SAFETY_OFFICER, ROLES.FLEET_MANAGER]);
+    .in("role", Object.values(ROLES));
 
   const alertDrivers = (drivers ?? []).filter((driver) => {
     if (isLicenseExpired(driver.license_expiry)) return true;
