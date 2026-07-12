@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Eye, EyeOff, Truck } from "lucide-react";
@@ -44,6 +45,7 @@ function getSupabaseClient() {
 }
 
 export function AuthForm() {
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -73,6 +75,12 @@ export function AuthForm() {
   const isLogin = mode === "login";
   const registerPassword = registerForm.watch("password");
   const registerConfirmPassword = registerForm.watch("confirmPassword");
+
+  useEffect(() => {
+    if (searchParams.get("mode") === "register") {
+      setMode("register");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     try {
