@@ -43,7 +43,12 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
   const isWelcomeRoute = request.nextUrl.pathname === "/";
   const isUploadRoute = request.nextUrl.pathname.startsWith("/upload");
-  const isPublicRoute = isAuthRoute || isWelcomeRoute || isUploadRoute;
+  const isTrackRoute = request.nextUrl.pathname.startsWith("/track");
+  const isPublicApiRoute =
+    request.nextUrl.pathname.startsWith("/api/upload/") ||
+    request.nextUrl.pathname.startsWith("/api/trips/location/");
+  const isPublicRoute =
+    isAuthRoute || isWelcomeRoute || isUploadRoute || isTrackRoute || isPublicApiRoute;
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();

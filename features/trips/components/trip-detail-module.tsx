@@ -8,6 +8,7 @@ import {
 import { StatusBadge } from "@/components/data/status-badge";
 import { TruckLoaderSection } from "@/components/ui/truck-loader";
 import { TripLifecycleActions } from "@/features/trips/components/trip-lifecycle-actions";
+import { TripLocationPanel } from "@/components/trips/trip-location-panel";
 import { TripUpdatesTimeline } from "@/features/trips/components/trip-updates-timeline";
 import { fetchFleetLabels, fetchTripById } from "@/lib/fleet/client-queries";
 import { formatCurrency, formatNumber } from "@/lib/utils/format";
@@ -107,6 +108,7 @@ export function TripDetailModule({
           { label: "Status", value: <StatusBadge status={trip.status} /> },
         ]}
       />
+      {!compact ? <TripLocationPanel trip={trip} /> : null}
       {!compact ? <TripUpdatesTimeline updates={initialUpdates} /> : null}
     </div>
   );

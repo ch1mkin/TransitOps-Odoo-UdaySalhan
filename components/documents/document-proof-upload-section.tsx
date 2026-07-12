@@ -138,7 +138,7 @@ export function DocumentProofUploadSection<T extends string>({
     }, 2000);
 
     return () => window.clearInterval(timer);
-  }, [handlers, sessionId, cropOpen, value]);
+  }, [sessionId, cropOpen, value]);
 
   const handleDesktopFile = (file: File | null) => {
     if (!file) return;
@@ -177,32 +177,34 @@ export function DocumentProofUploadSection<T extends string>({
         ) : null}
       </div>
 
-      <Select
-        label="Document type"
-        value={documentType}
-        onChange={(event) => {
-          const nextType = event.target.value as T;
-          setDocumentType(nextType);
-          onChange(null);
-          void (async () => {
-            const result = await handlers.createSession(nextType);
-            if (!result.success || !result.sessionId || !result.token) {
-              setMobileStatus(result.error ?? "Could not start mobile upload.");
-              return;
-            }
-            setSessionId(result.sessionId);
-            setUploadToken(result.token);
-            setMobileStatus("Scan the QR code with your phone camera.");
-          })();
-        }}
-        disabled={disabled}
-      >
-        {documentTypes.map((type) => (
-          <option key={type} value={type}>
-            {type}
-          </option>
-        ))}
-      </Select>
+      {documentTypes.length > 1 ? (
+        <Select
+          label="Document type"
+          value={documentType}
+          onChange={(event) => {
+            const nextType = event.target.value as T;
+            setDocumentType(nextType);
+            onChange(null);
+            void (async () => {
+              const result = await handlers.createSession(nextType);
+              if (!result.success || !result.sessionId || !result.token) {
+                setMobileStatus(result.error ?? "Could not start mobile upload.");
+                return;
+              }
+              setSessionId(result.sessionId);
+              setUploadToken(result.token);
+              setMobileStatus("Scan the QR code with your phone camera.");
+            })();
+          }}
+          disabled={disabled}
+        >
+          {documentTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </Select>
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-card p-4">

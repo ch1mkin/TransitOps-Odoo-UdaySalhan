@@ -10,7 +10,12 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { createVehicle, updateVehicle } from "@/lib/fleet/actions";
+import { uploadVehiclePhoto } from "@/lib/fleet/vehicle-photo-actions";
 import { vehicleSchema } from "@/lib/fleet/schemas";
+import {
+  VehiclePhotoUploadSection,
+  type PreparedVehiclePhoto,
+} from "@/components/vehicles/vehicle-photo-upload-section";
 import type { Vehicle } from "@/types/entities";
 
 interface VehicleFormDialogProps {
@@ -26,6 +31,7 @@ export function VehicleFormDialog({
 }: VehicleFormDialogProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [photo, setPhoto] = useState<PreparedVehiclePhoto | null>(null);
   const isEdit = Boolean(vehicle);
 
   const {
@@ -63,10 +69,21 @@ export function VehicleFormDialog({
     }
   }, [vehicle, open, reset]);
 
+  useEffect(() => {
+    if (!open) {
+      setPhoto(null);
+    }
+  }, [open]);
+
   const onSubmit = handleSubmit(async (values) => {
     const parsed = vehicleSchema.safeParse(values);
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Invalid form data");
+      return;
+    }
+
+    if (!isEdit && !photo) {
+      toast.error("Please upload and crop a vehicle photo.");
       return;
     }
 
@@ -75,15 +92,30 @@ export function VehicleFormDialog({
       isEdit && vehicle
         ? await updateVehicle(vehicle.id, parsed.data)
         : await createVehicle(parsed.data);
-    setSubmitting(false);
 
     if (!result.success) {
+      setSubmitting(false);
       toast.error(result.error);
       return;
     }
 
+    if (!isEdit && photo && result.id) {
+      const formData = new FormData();
+      formData.set("file", photo.file);
+      const photoResult = await uploadVehiclePhoto(result.id, formData);
+      if (!photoResult.success) {
+        setSubmitting(false);
+        toast.error(photoResult.error);
+        return;
+      }
+    }
+
+    setSubmitting(false);
     toast.success(isEdit ? "Vehicle updated" : "Vehicle added to fleet");
-    if (!isEdit) reset();
+    if (!isEdit) {
+      reset();
+      setPhoto(null);
+    }
     onOpenChange(false);
     router.refresh();
   });
@@ -98,8 +130,13 @@ export function VehicleFormDialog({
           ? "Update vehicle registry details."
           : "Register a new vehicle in the fleet."
       }
+      className="w-[min(100%,48rem)]"
     >
       <form onSubmit={onSubmit} className="space-y-4">
+        {!isEdit ? (
+          <VehiclePhotoUploadSection value={photo} onChange={setPhoto} disabled={submitting} />
+        ) : null}
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="registration_number">Registration Number</Label>

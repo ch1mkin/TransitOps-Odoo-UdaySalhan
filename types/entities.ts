@@ -13,6 +13,7 @@ export interface Vehicle {
   status: VehicleStatus;
   acquisition_cost: number;
   purchase_date: string;
+  photo_storage_path?: string | null;
 }
 
 export interface Driver {
@@ -42,6 +43,7 @@ export interface Trip {
   actual_distance?: number | null;
   fuel_used?: number | null;
   revenue?: number | null;
+  tracking_token?: string | null;
 }
 
 export interface MaintenanceLog {
@@ -115,6 +117,15 @@ export interface VehicleUploadSession {
   file_name?: string | null;
   mime_type?: string | null;
   expires_at: string;
+}
+
+export interface TripLocation {
+  id: string;
+  trip_id: string;
+  latitude: number;
+  longitude: number;
+  accuracy?: number | null;
+  recorded_at: string;
 }
 
 export interface TripUpdate {

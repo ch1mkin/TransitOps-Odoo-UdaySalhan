@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { ROLES } from "@/constants/roles";
 import { DRIVER_DOCS_BUCKET } from "@/constants/driver-documents";
 import { canManageDrivers } from "@/lib/fleet/permissions";
+import { uploadProofSessionFile } from "@/lib/fleet/proof-upload-core";
 import { requireSessionRole } from "@/lib/fleet/session";
 import { driverDocumentSchema } from "@/lib/fleet/schemas";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -153,67 +154,22 @@ export async function uploadDriverProofByToken(
   formData: FormData
 ): Promise<ActionResult> {
   const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) {
+  if (!(file instanceof File)) {
     return { success: false, error: "Please select an image to upload." };
   }
 
-  if (file.size > MAX_DOC_BYTES) {
-    return { success: false, error: "File must be 10 MB or smaller." };
+  const result = await uploadProofSessionFile({
+    table: "driver_upload_sessions",
+    bucket: DRIVER_DOCS_BUCKET,
+    token,
+    file,
+  });
+
+  if (!result.success) {
+    return { success: false, error: result.error };
   }
 
-  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
-    return { success: false, error: "Only JPEG, PNG, or WebP images are allowed." };
-  }
-
-  const admin = createAdminClient();
-  if (!admin) {
-    return { success: false, error: "Mobile upload is not configured on the server." };
-  }
-
-  const { data: session, error } = await admin
-    .from("driver_upload_sessions")
-    .select("*")
-    .eq("token", token)
-    .maybeSingle<DriverUploadSession>();
-
-  if (error || !session) {
-    return { success: false, error: "Upload link is invalid or expired." };
-  }
-
-  if (new Date(session.expires_at).getTime() < Date.now()) {
-    return { success: false, error: "Upload link has expired." };
-  }
-
-  if (session.status === "completed") {
-    return { success: false, error: "This upload link has already been used." };
-  }
-
-  const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-  const storagePath = `sessions/${session.id}/raw.${extension}`;
-
-  const { error: uploadError } = await admin.storage
-    .from(DRIVER_DOCS_BUCKET)
-    .upload(storagePath, file, { contentType: file.type, upsert: true });
-
-  if (uploadError) {
-    return { success: false, error: uploadError.message };
-  }
-
-  const { error: updateError } = await admin
-    .from("driver_upload_sessions")
-    .update({
-      status: "uploaded",
-      temp_storage_path: storagePath,
-      file_name: file.name,
-      mime_type: file.type,
-    })
-    .eq("id", session.id);
-
-  if (updateError) {
-    return { success: false, error: updateError.message };
-  }
-
-  return { success: true, id: session.id };
+  return { success: true, id: result.id };
 }
 
 export async function uploadDriverDocument(formData: FormData): Promise<ActionResult> {

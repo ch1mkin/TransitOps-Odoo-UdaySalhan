@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
   // Keep .next inside the project. A remote distDir (/tmp) breaks the RSC client
   // manifest in dev (segment-explorer-node / __webpack_modules__ errors).
   serverExternalPackages: ["zod"],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "12mb",
+    },
+  },
   images: {
     remotePatterns: [
       {

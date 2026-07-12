@@ -4,26 +4,24 @@ import { useState } from "react";
 import { Camera, CheckCircle2, Upload } from "lucide-react";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
+import { prepareMobileUploadFile } from "@/lib/utils/mobile-image";
 
 interface MobileProofUploadProps {
   token: string;
   documentType: string;
+  uploadEndpoint: string;
   title: string;
   subtitle: string;
   doneMessage: string;
-  onUpload: (
-    token: string,
-    formData: FormData
-  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 export function MobileProofUpload({
   token,
   documentType,
+  uploadEndpoint,
   title,
   subtitle,
   doneMessage,
-  onUpload,
 }: MobileProofUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -36,20 +34,42 @@ export function MobileProofUpload({
       return;
     }
 
-    const formData = new FormData();
-    formData.set("file", file);
     setUploading(true);
     setError(null);
 
-    const result = await onUpload(token, formData);
-    setUploading(false);
+    try {
+      const prepared = await prepareMobileUploadFile(file);
+      const formData = new FormData();
+      formData.set("file", prepared);
 
-    if (!result.success) {
-      setError(result.error ?? "Upload failed.");
-      return;
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 90_000);
+
+      const response = await fetch(uploadEndpoint, {
+        method: "POST",
+        body: formData,
+        signal: controller.signal,
+      });
+
+      window.clearTimeout(timeout);
+
+      const result = (await response.json()) as { success: boolean; error?: string };
+
+      if (!response.ok || !result.success) {
+        setError(result.error ?? "Upload failed. Try again or use a smaller photo.");
+        return;
+      }
+
+      setDone(true);
+    } catch (uploadError) {
+      if (uploadError instanceof DOMException && uploadError.name === "AbortError") {
+        setError("Upload timed out. Check your connection and try again.");
+      } else {
+        setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
+      }
+    } finally {
+      setUploading(false);
     }
-
-    setDone(true);
   };
 
   return (

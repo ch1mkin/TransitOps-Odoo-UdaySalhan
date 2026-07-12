@@ -1,7 +1,6 @@
 "use client";
 
 import { MobileProofUpload } from "@/components/documents/mobile-proof-upload";
-import { uploadDriverProofByToken } from "@/lib/fleet/driver-document-actions";
 
 interface MobileDriverProofUploadProps {
   token: string;
@@ -16,10 +15,10 @@ export function MobileDriverProofUpload({
     <MobileProofUpload
       token={token}
       documentType={documentType}
+      uploadEndpoint={`/api/upload/driver-proof/${token}`}
       title="Upload"
       subtitle="Driver identity upload"
       doneMessage="Go back to your desktop to crop and complete the driver profile."
-      onUpload={uploadDriverProofByToken}
     />
   );
 }

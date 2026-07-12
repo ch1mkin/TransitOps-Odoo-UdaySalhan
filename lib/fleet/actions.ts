@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { ROLES } from "@/constants/roles";
+import { lookupCoordinates } from "@/lib/utils/geo";
 import {
   canCreateTrips,
   canManageDrivers,
@@ -220,13 +221,25 @@ export async function dispatchTrip(tripId: string): Promise<ActionResult> {
 
     const supabase = await createClient();
     const now = new Date().toISOString();
+    const trackingToken = crypto.randomUUID().replace(/-/g, "");
+    const sourceCoords = lookupCoordinates(trip.source);
 
     const { error: tripError } = await supabase
       .from("trips")
-      .update({ status: "Dispatched", dispatch_time: now })
+      .update({
+        status: "Dispatched",
+        dispatch_time: now,
+        tracking_token: trackingToken,
+      })
       .eq("id", tripId);
 
     if (tripError) return { success: false, error: tripError.message };
+
+    await supabase.from("trip_locations").insert({
+      trip_id: tripId,
+      latitude: sourceCoords.lat,
+      longitude: sourceCoords.lng,
+    });
 
     await supabase.from("vehicles").update({ status: "On Trip" }).eq("id", vehicle.id);
     await supabase.from("drivers").update({ status: "On Trip" }).eq("id", driver.id);

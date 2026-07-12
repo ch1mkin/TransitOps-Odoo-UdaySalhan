@@ -22,6 +22,7 @@ type VehicleRow = {
   acquisition_cost: number | string;
   status: Vehicle["status"];
   purchase_date: string;
+  photo_storage_path?: string | null;
 };
 
 type DriverRow = {
@@ -51,6 +52,7 @@ type TripRow = {
   status: Trip["status"];
   dispatch_time: string | null;
   completion_time?: string | null;
+  tracking_token?: string | null;
 };
 
 export function mapVehicle(row: VehicleRow): Vehicle {
@@ -65,6 +67,7 @@ export function mapVehicle(row: VehicleRow): Vehicle {
     acquisition_cost: Number(row.acquisition_cost),
     status: row.status,
     purchase_date: row.purchase_date,
+    photo_storage_path: row.photo_storage_path ?? null,
   };
 }
 
@@ -98,6 +101,7 @@ export function mapTrip(row: TripRow): Trip {
     status: row.status,
     dispatch_time: row.dispatch_time,
     completion_time: row.completion_time ?? null,
+    tracking_token: row.tracking_token ?? null,
   };
 }
 

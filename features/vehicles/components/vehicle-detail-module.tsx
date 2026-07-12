@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { TruckLoaderSection } from "@/components/ui/truck-loader";
 import { VehicleFormDialog } from "@/features/vehicles/components/vehicle-form-dialog";
 import { RetireVehicleButton } from "@/features/vehicles/components/retire-vehicle-button";
+import { VehiclePhotoPanel } from "@/components/vehicles/vehicle-photo-panel";
 import { updateVehicleStatus } from "@/lib/fleet/actions";
 import { fetchVehicleById } from "@/lib/fleet/client-queries";
 import { formatCurrency, formatNumber } from "@/lib/utils/format";
@@ -116,6 +117,11 @@ export function VehicleDetailModule({
             ),
           },
         ]}
+      />
+
+      <VehiclePhotoPanel
+        photoStoragePath={vehicle.photo_storage_path}
+        vehicleName={vehicle.vehicle_name}
       />
 
       {canManage ? (

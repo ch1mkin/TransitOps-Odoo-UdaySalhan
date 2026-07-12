@@ -1,7 +1,6 @@
 "use client";
 
 import { MobileProofUpload } from "@/components/documents/mobile-proof-upload";
-import { uploadVehicleProofByToken } from "@/lib/fleet/vehicle-upload-actions";
 
 interface MobileVehicleProofUploadProps {
   token: string;
@@ -16,10 +15,10 @@ export function MobileVehicleProofUpload({
     <MobileProofUpload
       token={token}
       documentType={documentType}
+      uploadEndpoint={`/api/upload/vehicle-proof/${token}`}
       title="Upload"
       subtitle="Vehicle document upload"
       doneMessage="Go back to your desktop to crop and complete the document upload."
-      onUpload={uploadVehicleProofByToken}
     />
   );
 }
