@@ -77,15 +77,6 @@
     }
   }
 
-  @keyframes loader-wheel-spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
   @keyframes loader-dash-scroll {
     0% {
       transform: translateX(0);
@@ -120,12 +111,8 @@
   }
 
   .loader-truck {
+    transform: translateX(-50%);
     animation: loader-truck-move 1.6s ease-in-out infinite;
-  }
-
-  .loader-wheel {
-    transform-box: fill-box;
-    animation: loader-wheel-spin 0.55s linear infinite;
   }
 
   .loader-dashes {
@@ -148,7 +135,6 @@
 
   @media (prefers-reduced-motion: reduce) {
     .loader-truck,
-    .loader-wheel,
     .loader-dashes,
     .loader-bar,
     .loader-road-fill,

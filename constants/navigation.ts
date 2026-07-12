@@ -141,3 +141,19 @@ export const PROFILE_NAV: NavItem = {
 export function getNavForRole(role: Role): NavItem[] {
   return NAV_ITEMS.filter((item) => item.roles.includes(role));
 }
+
+/** Picks the single best-matching nav href (longest prefix match) for the current path. */
+export function getActiveNavHref(pathname: string, navItems: NavItem[]): string | null {
+  let best: NavItem | null = null;
+
+  for (const item of navItems) {
+    const matches =
+      pathname === item.href || pathname.startsWith(`${item.href}/`);
+    if (!matches) continue;
+    if (!best || item.href.length > best.href.length) {
+      best = item;
+    }
+  }
+
+  return best?.href ?? null;
+}

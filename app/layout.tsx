@@ -13,9 +13,9 @@ export const metadata: Metadata = {
   title: `${BRAND.name} — Smart Transport Operations`,
   description: "Fleet and transport operations management platform",
   icons: {
-    icon: [{ url: BRAND.favicon, type: "image/svg+xml" }],
+    icon: [{ url: BRAND.favicon, type: "image/png" }],
     shortcut: BRAND.favicon,
-    apple: [{ url: BRAND.logoIcon, type: "image/svg+xml" }, BRAND.appleTouchIcon],
+    apple: BRAND.appleTouchIcon,
   },
 };
 

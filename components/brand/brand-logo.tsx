@@ -15,7 +15,7 @@ interface BrandLogoProps {
 
 const aspectRatio: Record<BrandLogoVariant, number> = {
   icon: 1,
-  full: 200 / 48,
+  full: 1,
 };
 
 export function BrandLogo({

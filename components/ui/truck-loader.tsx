@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 
 interface TruckLoaderProps {
@@ -9,71 +10,142 @@ interface TruckLoaderProps {
 }
 
 const sizeMap = {
-  sm: { shell: "w-40", road: "h-16", icon: "h-9 w-[4.5rem]", bar: "w-28" },
-  md: { shell: "w-48", road: "h-[4.5rem]", icon: "h-11 w-[5.5rem]", bar: "w-36" },
-  lg: { shell: "w-60", road: "h-24", icon: "h-14 w-[7rem]", bar: "w-44" },
+  sm: { shell: "w-40", road: "h-16", icon: "h-9 w-[4.75rem]", bar: "w-28" },
+  md: { shell: "w-48", road: "h-[4.5rem]", icon: "h-11 w-[5.75rem]", bar: "w-36" },
+  lg: { shell: "w-60", road: "h-24", icon: "h-14 w-[7.25rem]", bar: "w-44" },
 };
+
+function subscribeReducedMotion(onChange: () => void) {
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  media.addEventListener("change", onChange);
+  return () => media.removeEventListener("change", onChange);
+}
+
+function getReducedMotionSnapshot() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function getReducedMotionServerSnapshot() {
+  return false;
+}
+
+function usePrefersReducedMotion() {
+  return useSyncExternalStore(
+    subscribeReducedMotion,
+    getReducedMotionSnapshot,
+    getReducedMotionServerSnapshot
+  );
+}
 
 function TruckWheel({
   cx,
   cy,
   r,
-  className,
+  spin,
 }: {
   cx: number;
   cy: number;
   r: number;
-  className?: string;
+  spin: boolean;
 }) {
   return (
-    <g className={cn("loader-wheel", className)} style={{ transformOrigin: `${cx}px ${cy}px` }}>
-      <circle cx={cx} cy={cy} r={r} fill="#111827" />
-      <circle cx={cx} cy={cy} r={r - 1.5} fill="none" stroke="#374151" strokeWidth="1" />
-      <circle cx={cx} cy={cy} r={r - 3} fill="none" stroke="#6b7280" strokeWidth="1.25" strokeDasharray="3 2.5" />
-      <line x1={cx} y1={cy - r + 4} x2={cx} y2={cy + r - 4} stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" />
-      <line x1={cx - r + 4} y1={cy} x2={cx + r - 4} y2={cy} stroke="#d1d5db" strokeWidth="1.5" strokeLinecap="round" />
-      <line
-        x1={cx - (r - 5) * 0.7}
-        y1={cy - (r - 5) * 0.7}
-        x2={cx + (r - 5) * 0.7}
-        y2={cy + (r - 5) * 0.7}
-        stroke="#9ca3af"
-        strokeWidth="1.25"
-        strokeLinecap="round"
-      />
-      <line
-        x1={cx - (r - 5) * 0.7}
-        y1={cy + (r - 5) * 0.7}
-        x2={cx + (r - 5) * 0.7}
-        y2={cy - (r - 5) * 0.7}
-        stroke="#9ca3af"
-        strokeWidth="1.25"
-        strokeLinecap="round"
-      />
-      <circle cx={cx} cy={cy} r={r * 0.28} fill="#f3f4f6" />
-      <circle cx={cx} cy={cy} r={r * 0.12} fill="#9ca3af" />
+    <g transform={`translate(${cx} ${cy})`}>
+      <circle r={r} fill="#0f172a" stroke="#334155" strokeWidth="0.8" />
+      <g>
+        {spin ? (
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            from="0"
+            to="360"
+            dur="0.5s"
+            repeatCount="indefinite"
+          />
+        ) : null}
+        <circle r={r - 1.75} fill="none" stroke="#475569" strokeWidth="1" />
+        <circle
+          r={r - 3.25}
+          fill="none"
+          stroke="#94a3b8"
+          strokeWidth="1.1"
+          strokeDasharray="2.8 2.2"
+        />
+        <line
+          x1="0"
+          y1={-(r - 3)}
+          x2="0"
+          y2={r - 3}
+          stroke="#e2e8f0"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+        <line
+          x1={-(r - 3)}
+          y1="0"
+          x2={r - 3}
+          y2="0"
+          stroke="#e2e8f0"
+          strokeWidth="1.4"
+          strokeLinecap="round"
+        />
+        <line
+          x1={-(r - 3.5) * 0.72}
+          y1={-(r - 3.5) * 0.72}
+          x2={(r - 3.5) * 0.72}
+          y2={(r - 3.5) * 0.72}
+          stroke="#cbd5e1"
+          strokeWidth="1.1"
+          strokeLinecap="round"
+        />
+        <line
+          x1={-(r - 3.5) * 0.72}
+          y1={(r - 3.5) * 0.72}
+          x2={(r - 3.5) * 0.72}
+          y2={-(r - 3.5) * 0.72}
+          stroke="#cbd5e1"
+          strokeWidth="1.1"
+          strokeLinecap="round"
+        />
+        <circle r={r * 0.3} fill="#f8fafc" />
+        <circle r={r * 0.13} fill="#64748b" />
+      </g>
     </g>
   );
 }
 
-function TruckIcon({ className }: { className?: string }) {
+function TruckIcon({
+  className,
+  spinWheels = true,
+}: {
+  className?: string;
+  spinWheels?: boolean;
+}) {
+  const reducedMotion = usePrefersReducedMotion();
+  const spin = spinWheels && !reducedMotion;
+
   return (
     <svg
-      viewBox="0 0 100 44"
-      className={cn("text-primary", className)}
+      viewBox="0 0 104 46"
+      className={cn("text-[#0f2744]", className)}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
     >
-      <rect x="34" y="9" width="54" height="23" rx="2.5" fill="currentColor" />
-      <path d="M8 13h22l7 7v12H8V13z" fill="currentColor" />
-      <rect x="12" y="16" width="13" height="10" rx="1.25" fill="white" fillOpacity="0.42" />
-      <rect x="38" y="13" width="44" height="2" rx="1" fill="white" fillOpacity="0.18" />
-      <rect x="5" y="22" width="3.5" height="5" rx="0.75" fill="#FBBF24" />
-      <rect x="86" y="22" width="4" height="6" rx="0.75" fill="#EF4444" />
-      <rect x="30" y="18" width="2" height="14" fill="currentColor" fillOpacity="0.85" />
-      <TruckWheel cx={22} cy={34} r={7} />
-      <TruckWheel cx={70} cy={34} r={7} />
+      <rect x="36" y="8" width="56" height="24" rx="2.5" fill="currentColor" />
+      <path d="M6 12h24l8 8v14H6V12z" fill="currentColor" />
+      <rect x="10" y="15" width="14" height="11" rx="1.25" fill="#14b8a6" fillOpacity="0.35" />
+      <rect x="40" y="12" width="46" height="2.5" rx="1" fill="#14b8a6" fillOpacity="0.55" />
+      <rect x="3" y="21" width="4" height="6" rx="0.75" fill="#14b8a6" />
+      <rect x="90" y="21" width="4.5" height="7" rx="0.75" fill="#ef4444" />
+      <rect x="32" y="17" width="2.5" height="15" fill="currentColor" fillOpacity="0.9" />
+      <path
+        d="M14 28h10M8 28h4"
+        stroke="#14b8a6"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+      <TruckWheel cx={23} cy={35} r={7.5} spin={spin} />
+      <TruckWheel cx={72} cy={35} r={7.5} spin={spin} />
     </svg>
   );
 }
@@ -112,7 +184,7 @@ export function TruckLoader({
         )}
       >
         <div className="loader-road absolute inset-x-3 bottom-3 h-1 overflow-hidden rounded-full bg-muted">
-          <div className="loader-road-fill h-full rounded-full bg-accent/80" />
+          <div className="loader-road-fill h-full rounded-full bg-[#14b8a6]/80" />
         </div>
 
         <div className="loader-dashes pointer-events-none absolute inset-x-0 bottom-5 flex gap-4 opacity-50">
@@ -121,7 +193,7 @@ export function TruckLoader({
           ))}
         </div>
 
-        <div className="loader-truck absolute bottom-4 left-1/2 -translate-x-1/2">
+        <div className="loader-truck absolute bottom-3.5 left-1/2">
           <TruckIcon className={dim.icon} />
         </div>
       </div>
@@ -130,13 +202,8 @@ export function TruckLoader({
         <p className={cn("font-medium text-foreground", size === "sm" ? "text-xs" : "text-sm")}>
           {label}
         </p>
-        <div
-          className={cn(
-            "mx-auto h-1 overflow-hidden rounded-full bg-muted",
-            dim.bar
-          )}
-        >
-          <div className="loader-bar h-full rounded-full bg-accent" />
+        <div className={cn("mx-auto h-1 overflow-hidden rounded-full bg-muted", dim.bar)}>
+          <div className="loader-bar h-full rounded-full bg-[#14b8a6]" />
         </div>
       </div>
     </div>

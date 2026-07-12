@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
-import { getNavForRole, PROFILE_NAV } from "@/constants/navigation";
+import { getNavForRole, getActiveNavHref, PROFILE_NAV } from "@/constants/navigation";
 import { ROLE_LABELS, type Role } from "@/constants/roles";
 import { useProfileTab } from "@/hooks/use-entity-tab";
 import { useWorkspaceStore } from "@/store/workspace-store";
@@ -29,6 +29,7 @@ export function WorkspaceSidebar({ role, userName, userId }: WorkspaceSidebarPro
   const toggleSidebar = useWorkspaceStore((s) => s.toggleSidebar);
   const openProfileTab = useProfileTab();
   const navItems = getNavForRole(role);
+  const activeNavHref = getActiveNavHref(pathname, navItems);
 
   const handleNavClick = (href: string) => {
     router.push(href);
@@ -84,8 +85,7 @@ export function WorkspaceSidebar({ role, userName, userId }: WorkspaceSidebarPro
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive =
-            pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const isActive = item.href === activeNavHref;
 
           return (
             <button
