@@ -62,8 +62,8 @@ function getTooltipPosition(
 }
 
 function ArrowIcon({ placement }: { placement: WalkthroughPlacement }) {
-  const className = "size-8 shrink-0";
-  const strokeWidth = 3.5;
+  const className = "size-6 shrink-0";
+  const strokeWidth = 3;
   switch (placement) {
     case "top":
       return <ArrowDown className={className} strokeWidth={strokeWidth} />;
@@ -181,15 +181,15 @@ export function WalkthroughOverlay({
           <div
             className={cn(
               "walkthrough-arrow absolute z-[202]",
-              step.placement === "right" && "-left-[3.75rem] top-1/2 -translate-y-1/2",
-              step.placement === "left" && "-right-[3.75rem] top-1/2 -translate-y-1/2",
-              step.placement === "bottom" && "left-1/2 top-0 -translate-x-1/2 -translate-y-[calc(100%+10px)]",
-              step.placement === "top" && "bottom-0 left-1/2 -translate-x-1/2 translate-y-[calc(100%+10px)]"
+              step.placement === "right" && "-left-[3rem] top-1/2 -translate-y-1/2",
+              step.placement === "left" && "-right-[3rem] top-1/2 -translate-y-1/2",
+              step.placement === "bottom" && "left-1/2 top-0 -translate-x-1/2 -translate-y-[calc(100%+8px)]",
+              step.placement === "top" && "bottom-0 left-1/2 -translate-x-1/2 translate-y-[calc(100%+8px)]"
             )}
             style={arrowBounceStyle(step.placement)}
             aria-hidden
           >
-            <div className="flex size-14 items-center justify-center rounded-full bg-amber-400 text-neutral-950 shadow-[0_6px_24px_rgba(0,0,0,0.55)] ring-4 ring-white">
+            <div className="flex size-11 items-center justify-center rounded-full bg-amber-400 text-neutral-950 shadow-[0_4px_16px_rgba(0,0,0,0.45)] ring-2 ring-white">
               <ArrowIcon placement={step.placement} />
             </div>
           </div>
