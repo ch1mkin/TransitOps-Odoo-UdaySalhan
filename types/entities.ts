@@ -106,6 +106,17 @@ export interface DriverUploadSession {
   expires_at: string;
 }
 
+export interface VehicleUploadSession {
+  id: string;
+  token: string;
+  document_type: string;
+  status: "waiting" | "uploaded" | "completed" | "expired";
+  temp_storage_path?: string | null;
+  file_name?: string | null;
+  mime_type?: string | null;
+  expires_at: string;
+}
+
 export interface TripUpdate {
   id: string;
   trip_id: string;
