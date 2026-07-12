@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +12,10 @@ interface DialogProps {
   description?: string;
   children: ReactNode;
   className?: string;
+  /** Render at document.body so nested modals do not close parent dialogs. */
+  portal?: boolean;
+  /** Raise stacking order for dialogs opened above another modal. */
+  stackLevel?: "default" | "nested";
 }
 
 export function Dialog({
@@ -20,8 +25,15 @@ export function Dialog({
   description,
   children,
   className,
+  portal = false,
+  stackLevel = "default",
 }: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -36,14 +48,24 @@ export function Dialog({
     }
   }, [open]);
 
-  return (
+  const content = (
     <dialog
       ref={dialogRef}
       className={cn(
-        "fixed inset-0 z-50 m-auto w-[min(100%,32rem)] max-h-[90vh] overflow-hidden rounded-xl border border-border bg-card p-0 text-foreground shadow-xl backdrop:bg-black/50 open:flex open:flex-col",
+        "fixed inset-0 m-auto w-[min(100%,32rem)] max-h-[90vh] overflow-hidden rounded-xl border border-border bg-card p-0 text-foreground shadow-xl backdrop:bg-black/50 open:flex open:flex-col",
+        stackLevel === "nested" ? "z-[60]" : "z-50",
         className
       )}
-      onClose={() => onOpenChange(false)}
+      onClose={(event) => {
+        event.stopPropagation();
+        if (event.target === dialogRef.current) {
+          onOpenChange(false);
+        }
+      }}
+      onCancel={(event) => {
+        event.preventDefault();
+        onOpenChange(false);
+      }}
     >
       <div className="flex items-start justify-between border-b border-border px-5 py-4">
         <div>
@@ -64,4 +86,10 @@ export function Dialog({
       <div className="overflow-y-auto px-5 py-4">{children}</div>
     </dialog>
   );
+
+  if (portal && mounted) {
+    return createPortal(content, document.body);
+  }
+
+  return content;
 }

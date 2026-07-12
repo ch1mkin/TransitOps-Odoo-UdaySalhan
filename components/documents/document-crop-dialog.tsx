@@ -93,6 +93,8 @@ export function DocumentCropDialog({
   return (
     <Dialog
       open={open}
+      portal
+      stackLevel="nested"
       onOpenChange={(next) => {
         if (!next) onCancel();
       }}
