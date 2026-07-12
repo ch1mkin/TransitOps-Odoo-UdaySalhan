@@ -9,7 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import {
+  DriverProofUploadSection,
+  type PreparedDriverProof,
+} from "@/components/drivers/driver-proof-upload-section";
 import { createDriver, updateDriver } from "@/lib/fleet/actions";
+import { uploadDriverDocument } from "@/lib/fleet/driver-document-actions";
 import { driverSchema } from "@/lib/fleet/schemas";
 import type { Driver } from "@/types/entities";
 
@@ -22,6 +27,7 @@ interface DriverFormDialogProps {
 export function DriverFormDialog({ open, onOpenChange, driver }: DriverFormDialogProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [proof, setProof] = useState<PreparedDriverProof | null>(null);
   const isEdit = Boolean(driver);
 
   const {
@@ -59,6 +65,12 @@ export function DriverFormDialog({ open, onOpenChange, driver }: DriverFormDialo
     }
   }, [driver, open, reset]);
 
+  useEffect(() => {
+    if (!open) {
+      setProof(null);
+    }
+  }, [open]);
+
   const onSubmit = handleSubmit(async (values) => {
     const parsed = driverSchema.safeParse(values);
     if (!parsed.success) {
@@ -66,19 +78,43 @@ export function DriverFormDialog({ open, onOpenChange, driver }: DriverFormDialo
       return;
     }
 
+    if (!isEdit && !proof) {
+      toast.error("Please upload and crop a driving license or Aadhaar card.");
+      return;
+    }
+
     setSubmitting(true);
     const result = isEdit && driver
       ? await updateDriver(driver.id, parsed.data)
       : await createDriver(parsed.data);
-    setSubmitting(false);
 
     if (!result.success) {
+      setSubmitting(false);
       toast.error(result.error);
       return;
     }
 
+    if (!isEdit && proof && result.id) {
+      const formData = new FormData();
+      formData.set("driver_id", result.id);
+      formData.set("document_type", proof.documentType);
+      formData.set("file", proof.file);
+      const uploadResult = await uploadDriverDocument(formData);
+      setSubmitting(false);
+
+      if (!uploadResult.success) {
+        toast.error(uploadResult.error);
+        return;
+      }
+    } else {
+      setSubmitting(false);
+    }
+
     toast.success(isEdit ? "Driver updated" : "Driver added to roster");
-    if (!isEdit) reset();
+    if (!isEdit) {
+      reset();
+      setProof(null);
+    }
     onOpenChange(false);
     router.refresh();
   });
@@ -88,9 +124,14 @@ export function DriverFormDialog({ open, onOpenChange, driver }: DriverFormDialo
       open={open}
       onOpenChange={onOpenChange}
       title={isEdit ? "Edit Driver" : "Add Driver"}
-      description="Manage driver profile, license, and safety score."
+      description="Manage driver profile, license, and identity proof."
+      className="w-[min(100%,48rem)]"
     >
       <form onSubmit={onSubmit} className="space-y-4">
+        {!isEdit ? (
+          <DriverProofUploadSection value={proof} onChange={setProof} disabled={submitting} />
+        ) : null}
+
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="name">Full Name</Label>
@@ -164,7 +205,7 @@ export function DriverFormDialog({ open, onOpenChange, driver }: DriverFormDialo
             Cancel
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? "Saving…" : isEdit ? "Save Changes" : "Add Driver"}
+            {submitting ? "Saving…" : isEdit ? "Save Changes" : "Create Driver"}
           </Button>
         </div>
       </form>

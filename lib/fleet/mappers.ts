@@ -1,6 +1,7 @@
 import type {
   AppNotification,
   Driver,
+  DriverDocument,
   ExpenseLog,
   FuelLog,
   MaintenanceLog,
@@ -181,6 +182,24 @@ export function mapVehicleDocument(row: {
     storage_path: row.storage_path,
     expiry_date: row.expiry_date,
     notes: row.notes,
+  };
+}
+
+export function mapDriverDocument(row: {
+  id: string;
+  driver_id: string;
+  document_type: string;
+  file_name: string;
+  storage_path: string;
+  created_at: string;
+}): DriverDocument {
+  return {
+    id: row.id,
+    driver_id: row.driver_id,
+    document_type: row.document_type,
+    file_name: row.file_name,
+    storage_path: row.storage_path,
+    created_at: row.created_at,
   };
 }
 

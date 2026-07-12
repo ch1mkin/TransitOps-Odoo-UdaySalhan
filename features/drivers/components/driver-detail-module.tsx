@@ -11,15 +11,17 @@ import { StatusBadge } from "@/components/data/status-badge";
 import { Button } from "@/components/ui/button";
 import { TruckLoaderSection } from "@/components/ui/truck-loader";
 import { DriverFormDialog } from "@/features/drivers/components/driver-form-dialog";
+import { DriverDocumentsPanel } from "@/components/drivers/driver-documents-panel";
 import { updateDriverStatus } from "@/lib/fleet/actions";
 import { fetchDriverById } from "@/lib/fleet/client-queries";
 import { MANUAL_DRIVER_STATUSES } from "@/lib/fleet/status-rules";
-import type { Driver, DriverStatus } from "@/types/entities";
+import type { Driver, DriverDocument, DriverStatus } from "@/types/entities";
 
 interface DriverDetailModuleProps {
   id: string;
   compact?: boolean;
   initialData?: Driver | null;
+  initialDocuments?: DriverDocument[];
   canManage?: boolean;
   canChangeStatus?: boolean;
 }
@@ -28,6 +30,7 @@ export function DriverDetailModule({
   id,
   compact = false,
   initialData,
+  initialDocuments = [],
   canManage = false,
   canChangeStatus = false,
 }: DriverDetailModuleProps) {
@@ -102,6 +105,8 @@ export function DriverDetailModule({
           },
         ]}
       />
+
+      <DriverDocumentsPanel documents={initialDocuments} />
 
       {canManage ? (
         <DriverFormDialog

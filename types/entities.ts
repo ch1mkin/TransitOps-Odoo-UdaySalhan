@@ -86,6 +86,26 @@ export interface VehicleDocument {
   notes?: string | null;
 }
 
+export interface DriverDocument {
+  id: string;
+  driver_id: string;
+  document_type: string;
+  file_name: string;
+  storage_path: string;
+  created_at: string;
+}
+
+export interface DriverUploadSession {
+  id: string;
+  token: string;
+  document_type: string;
+  status: "waiting" | "uploaded" | "completed" | "expired";
+  temp_storage_path?: string | null;
+  file_name?: string | null;
+  mime_type?: string | null;
+  expires_at: string;
+}
+
 export interface TripUpdate {
   id: string;
   trip_id: string;

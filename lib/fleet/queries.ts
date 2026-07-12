@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import {
   mapDriver,
+  mapDriverDocument,
   mapExpense,
   mapFuelLog,
   mapMaintenance,
@@ -13,6 +14,7 @@ import {
 import type {
   AppNotification,
   Driver,
+  DriverDocument,
   ExpenseLog,
   FuelLog,
   MaintenanceLog,
@@ -206,6 +208,20 @@ export async function getVehicleDocuments(): Promise<FleetQueryResult<VehicleDoc
 
   if (error) return { data: null, error: error.message };
   return { data: (data ?? []).map(mapVehicleDocument), error: null };
+}
+
+export async function getDriverDocuments(
+  driverId: string
+): Promise<FleetQueryResult<DriverDocument[]>> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from("driver_documents")
+    .select("*")
+    .eq("driver_id", driverId)
+    .order("created_at", { ascending: false });
+
+  if (error) return { data: null, error: error.message };
+  return { data: (data ?? []).map(mapDriverDocument), error: null };
 }
 
 export async function getTripUpdates(

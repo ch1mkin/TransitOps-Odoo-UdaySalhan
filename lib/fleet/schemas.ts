@@ -84,3 +84,12 @@ export type MaintenanceInput = z.infer<typeof maintenanceSchema>;
 export type FuelLogInput = z.infer<typeof fuelLogSchema>;
 export type ExpenseInput = z.infer<typeof expenseSchema>;
 export type VehicleDocumentInput = z.infer<typeof vehicleDocumentSchema>;
+
+export const driverDocumentSchema = z.object({
+  driver_id: z.string().uuid("Select a driver"),
+  document_type: z.enum(["Driving License", "Aadhaar Card"]),
+  file_name: z.string().min(2, "File name is required"),
+  storage_path: z.string().min(2, "Storage path is required"),
+});
+
+export type DriverDocumentInput = z.infer<typeof driverDocumentSchema>;
