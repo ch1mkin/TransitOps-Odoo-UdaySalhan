@@ -39,27 +39,41 @@ export function AboutTrigger({ variant = "default", className }: AboutTriggerPro
         open={open}
         onOpenChange={setOpen}
         title="About TransitOps"
-        description="Hackathon project details"
+        description="Hackathon project overview"
       >
         <div className="space-y-5">
           <div className="flex items-center gap-3">
             <BrandLogo variant="icon" size={48} className="rounded-lg" />
             <div>
               <p className="text-sm font-semibold">{ABOUT.product}</p>
-              <p className="text-xs text-muted-foreground">{ABOUT.theme}</p>
+              <p className="text-xs text-muted-foreground">
+                {ABOUT.event} · {ABOUT.theme}
+              </p>
             </div>
           </div>
 
           <p className="text-sm leading-relaxed text-muted-foreground">
             {ABOUT.product} was built by{" "}
-            <span className="font-medium text-foreground">{ABOUT.builder}</span> during{" "}
-            <span className="font-medium text-foreground">{ABOUT.event}</span> under the theme{" "}
-            <span className="font-medium text-foreground">{ABOUT.theme}</span>.
+            <span className="font-medium text-foreground">{ABOUT.builder}</span> for{" "}
+            <span className="font-medium text-foreground">{ABOUT.event}</span>.
           </p>
 
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {ABOUT.problem.title}
+            </p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{ABOUT.problem.summary}</p>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {ABOUT.solution.title}
+            </p>
+            <p className="text-sm leading-relaxed text-muted-foreground">{ABOUT.solution.summary}</p>
+          </div>
+
           <div className="rounded-lg border border-border bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground">
-            A modern fleet and transport operations platform for vehicles, drivers, trips,
-            maintenance, fuel, expenses, and analytics.
+            {ABOUT.stack}
           </div>
         </div>
       </Dialog>

@@ -195,10 +195,6 @@
     filter: blur(18px);
   }
 
-  .welcome-app-preview {
-    position: relative;
-  }
-
   .auth-marketing-panel {
     min-height: 100%;
   }
