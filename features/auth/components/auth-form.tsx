@@ -7,6 +7,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { BrandLogo } from "@/components/brand/brand-logo";
+import {
+  AuthMarketingLeft,
+  AuthMarketingMobile,
+  AuthMarketingRight,
+} from "@/components/marketing/auth-side-panels";
 import { Button } from "@/components/ui/button";
 import { TruckLoader, TruckLoaderInline } from "@/components/ui/truck-loader";
 import {
@@ -294,7 +299,7 @@ export function AuthForm() {
     <>
       <MinimalConfetti active={showConfetti} />
 
-      <div className="auth-page-shell relative flex min-h-screen items-center justify-center overflow-hidden p-4">
+      <div className="auth-page-shell relative min-h-screen overflow-hidden p-4 py-8 sm:py-10">
         <div
           className={cn(
             "auth-page-glow pointer-events-none absolute inset-0",
@@ -302,12 +307,18 @@ export function AuthForm() {
           )}
         />
 
-        <Card
-          className={cn(
-            "auth-premium-card relative w-full max-w-md overflow-hidden border-border/70 bg-card/82 backdrop-blur-xl",
-            isLogin ? "auth-premium-card-login" : "auth-premium-card-register"
-          )}
-        >
+        <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center">
+          <AuthMarketingMobile mode={isLogin ? "login" : "register"} />
+
+          <div className="grid w-full items-stretch gap-6 lg:min-h-[calc(100dvh-5rem)] lg:items-center lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)_minmax(0,1fr)]">
+            <AuthMarketingLeft mode={isLogin ? "login" : "register"} />
+
+            <Card
+              className={cn(
+                "auth-premium-card relative w-full overflow-hidden border-border/70 bg-card/82 backdrop-blur-xl",
+                isLogin ? "auth-premium-card-login" : "auth-premium-card-register"
+              )}
+            >
           {loading ? (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/80 backdrop-blur-sm">
               <TruckLoader
@@ -572,7 +583,11 @@ export function AuthForm() {
               </Button>
             </form>
           </CardContent>
-        </Card>
+            </Card>
+
+            <AuthMarketingRight mode={isLogin ? "login" : "register"} />
+          </div>
+        </div>
       </div>
     </>
   );

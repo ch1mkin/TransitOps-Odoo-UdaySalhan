@@ -195,6 +195,14 @@
     filter: blur(18px);
   }
 
+  .welcome-app-preview {
+    position: relative;
+  }
+
+  .auth-marketing-panel {
+    min-height: 100%;
+  }
+
   .auth-page-shell {
     background:
       radial-gradient(circle at 12% 18%, rgba(37, 99, 235, 0.12), transparent 34%),
