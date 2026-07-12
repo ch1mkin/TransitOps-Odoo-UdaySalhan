@@ -5,6 +5,7 @@ import {
   ShieldCheck,
   Truck,
 } from "lucide-react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -36,12 +37,10 @@ export function WelcomeScreen() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
-          <div className="flex items-center gap-2.5">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Truck className="size-4" />
-            </div>
+          <Link href="/" className="flex items-center gap-2.5">
+            <BrandLogo variant="icon" size={36} className="rounded-xl" priority />
             <span className="text-sm font-semibold tracking-tight">TransitOps</span>
-          </div>
+          </Link>
           <Link href="/auth" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
             Sign in
           </Link>

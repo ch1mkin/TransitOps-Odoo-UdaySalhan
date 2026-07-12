@@ -6,7 +6,7 @@ import {
   EntityNotFound,
 } from "@/components/data/entity-detail-module";
 import { StatusBadge } from "@/components/data/status-badge";
-import { TruckLoader } from "@/components/ui/truck-loader";
+import { TruckLoaderSection } from "@/components/ui/truck-loader";
 import { TripLifecycleActions } from "@/features/trips/components/trip-lifecycle-actions";
 import { TripUpdatesTimeline } from "@/features/trips/components/trip-updates-timeline";
 import { fetchFleetLabels, fetchTripById } from "@/lib/fleet/client-queries";
@@ -41,11 +41,7 @@ export function TripDetailModule({
   });
 
   if (isLoading && !trip) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <TruckLoader size="sm" label="Loading trip…" />
-      </div>
-    );
+    return <TruckLoaderSection size="sm" label="Loading trip…" className="min-h-[280px]" />;
   }
 
   if (!trip) {

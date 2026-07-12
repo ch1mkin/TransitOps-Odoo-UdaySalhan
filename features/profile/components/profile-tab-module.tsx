@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ROLE_LABELS, ROLES, type Role } from "@/constants/roles";
 import { EntityDetailModule } from "@/components/data/entity-detail-module";
-import { TruckLoader } from "@/components/ui/truck-loader";
+import { TruckLoaderSection } from "@/components/ui/truck-loader";
 import { ProfileEditForm } from "@/features/profile/components/profile-edit-form";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types";
@@ -66,11 +66,7 @@ export function ProfileTabModule({
   }, [profileProp, userId]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <TruckLoader size="sm" label="Loading profile…" />
-      </div>
-    );
+    return <TruckLoaderSection size="sm" label="Loading profile…" className="min-h-[280px]" />;
   }
 
   const displayName = profile?.full_name ?? userName;

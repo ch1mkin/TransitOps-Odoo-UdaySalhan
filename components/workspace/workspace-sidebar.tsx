@@ -6,8 +6,8 @@ import {
   ChevronRight,
   LogOut,
   PanelLeft,
-  Truck,
 } from "lucide-react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import { getNavForRole, PROFILE_NAV } from "@/constants/navigation";
 import { ROLE_LABELS, type Role } from "@/constants/roles";
@@ -56,9 +56,7 @@ export function WorkspaceSidebar({ role, userName, userId }: WorkspaceSidebarPro
     >
       <div className="flex h-12 items-center justify-between border-b border-border px-3">
         <div className={cn("flex items-center gap-2", collapsed && "justify-center w-full")}>
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Truck className="size-4" />
-          </div>
+          <BrandLogo variant="icon" size={32} className="shrink-0 rounded-lg" />
           {!collapsed && (
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">TransitOps</p>

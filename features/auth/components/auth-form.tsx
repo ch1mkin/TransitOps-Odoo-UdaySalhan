@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Eye, EyeOff, Truck } from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import { TruckLoader, TruckLoaderInline } from "@/components/ui/truck-loader";
 import {
@@ -185,8 +186,8 @@ export function AuthForm() {
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-3 text-center">
-            <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Truck className="size-6" />
+            <div className="mx-auto flex size-12 items-center justify-center overflow-hidden rounded-xl">
+              <BrandLogo variant="icon" size={48} priority />
             </div>
             <CardTitle className="text-2xl">TransitOps</CardTitle>
             <CardDescription>

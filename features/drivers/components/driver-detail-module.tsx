@@ -9,7 +9,7 @@ import {
 import { InlineStatusSelect } from "@/components/data/inline-status-select";
 import { StatusBadge } from "@/components/data/status-badge";
 import { Button } from "@/components/ui/button";
-import { TruckLoader } from "@/components/ui/truck-loader";
+import { TruckLoaderSection } from "@/components/ui/truck-loader";
 import { DriverFormDialog } from "@/features/drivers/components/driver-form-dialog";
 import { updateDriverStatus } from "@/lib/fleet/actions";
 import { fetchDriverById } from "@/lib/fleet/client-queries";
@@ -41,11 +41,7 @@ export function DriverDetailModule({
   });
 
   if (isLoading && !driver) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <TruckLoader size="sm" label="Loading driver…" />
-      </div>
-    );
+    return <TruckLoaderSection size="sm" label="Loading driver…" className="min-h-[280px]" />;
   }
 
   if (!driver) {

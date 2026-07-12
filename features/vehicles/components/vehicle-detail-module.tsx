@@ -9,7 +9,7 @@ import {
 import { InlineStatusSelect } from "@/components/data/inline-status-select";
 import { StatusBadge } from "@/components/data/status-badge";
 import { Button } from "@/components/ui/button";
-import { TruckLoader } from "@/components/ui/truck-loader";
+import { TruckLoaderSection } from "@/components/ui/truck-loader";
 import { VehicleFormDialog } from "@/features/vehicles/components/vehicle-form-dialog";
 import { RetireVehicleButton } from "@/features/vehicles/components/retire-vehicle-button";
 import { updateVehicleStatus } from "@/lib/fleet/actions";
@@ -42,11 +42,7 @@ export function VehicleDetailModule({
   });
 
   if (isLoading && !vehicle) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <TruckLoader size="sm" label="Loading vehicle…" />
-      </div>
-    );
+    return <TruckLoaderSection size="sm" label="Loading vehicle…" className="min-h-[280px]" />;
   }
 
   if (!vehicle) {

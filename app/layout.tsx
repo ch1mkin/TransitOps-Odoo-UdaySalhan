@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { BRAND } from "@/constants/brand";
 import "./globals.css";
 
 const inter = Inter({
@@ -9,8 +10,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "TransitOps — Smart Transport Operations",
+  title: `${BRAND.name} — Smart Transport Operations`,
   description: "Fleet and transport operations management platform",
+  icons: {
+    icon: [{ url: BRAND.favicon, type: "image/svg+xml" }],
+    shortcut: BRAND.favicon,
+    apple: [{ url: BRAND.logoIcon, type: "image/svg+xml" }, BRAND.appleTouchIcon],
+  },
 };
 
 export default function RootLayout({
