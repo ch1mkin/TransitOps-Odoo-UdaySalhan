@@ -1,71 +1,37 @@
-"use client";
+import { FleetDataError } from "@/components/data/fleet-data-error";
+import { FuelModule } from "@/features/fuel/components/fuel-module";
+import { canManageFuel } from "@/lib/fleet/permissions";
+import { getPageRole } from "@/lib/fleet/page-role";
+import { getFleetLabels, getFuelLogs, getVehicles } from "@/lib/fleet/queries";
 
-import { useMemo, useState } from "react";
-import { DataTable, type DataTableColumn } from "@/components/data/data-table";
-import { ModuleFilters } from "@/components/data/module-filters";
-import { ModulePage } from "@/components/data/module-page";
-import { MOCK_FUEL, getVehicleLabel } from "@/lib/mock-data";
+export default async function FuelPage() {
+  const role = await getPageRole();
+  const [recordsResult, labelsResult, vehiclesResult] = await Promise.all([
+    getFuelLogs(),
+    getFleetLabels(),
+    getVehicles(),
+  ]);
 
-const columns: DataTableColumn<(typeof MOCK_FUEL)[0]>[] = [
-  {
-    key: "vehicle",
-    header: "Vehicle",
-    cell: (r) => (
-      <span className="font-medium">{getVehicleLabel(r.vehicle_id)}</span>
-    ),
-  },
-  {
-    key: "liters",
-    header: "Liters",
-    className: "text-right",
-    cell: (r) => r.liters,
-  },
-  {
-    key: "cost",
-    header: "Cost (₹)",
-    className: "text-right",
-    cell: (r) => r.cost.toLocaleString(),
-  },
-  {
-    key: "odometer",
-    header: "Odometer",
-    className: "text-right",
-    cell: (r) => `${r.odometer.toLocaleString()} km`,
-  },
-  { key: "date", header: "Date", cell: (r) => r.date },
-];
-
-export default function FuelPage() {
-  const [search, setSearch] = useState("");
-
-  const filtered = useMemo(() => {
-    if (!search) return MOCK_FUEL;
-    const q = search.toLowerCase();
-    return MOCK_FUEL.filter(
-      (r) =>
-        getVehicleLabel(r.vehicle_id).toLowerCase().includes(q) ||
-        r.date.includes(q)
+  if (recordsResult.error || !recordsResult.data) {
+    return (
+      <FleetDataError message={recordsResult.error ?? "Run migration 007_ops_tables.sql"} />
     );
-  }, [search]);
+  }
+
+  if (labelsResult.error || !labelsResult.data) {
+    return <FleetDataError message={labelsResult.error ?? "Unknown error"} />;
+  }
+
+  if (vehiclesResult.error || !vehiclesResult.data) {
+    return <FleetDataError message={vehiclesResult.error ?? "Unknown error"} />;
+  }
 
   return (
-    <ModulePage
-      title="Fuel Logs"
-      description="Track fuel consumption and costs"
-      filters={
-        <ModuleFilters
-          search={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search vehicle or date…"
-        />
-      }
-    >
-      <DataTable
-        columns={columns}
-        data={filtered}
-        getRowId={(r) => r.id}
-        emptyMessage="No fuel logs found."
-      />
-    </ModulePage>
+    <FuelModule
+      records={recordsResult.data}
+      vehicles={vehiclesResult.data}
+      vehicleLabels={labelsResult.data.vehicles}
+      canManage={canManageFuel(role)}
+    />
   );
 }

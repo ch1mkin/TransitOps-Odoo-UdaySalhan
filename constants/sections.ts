@@ -2,12 +2,17 @@
 export const SECTION_PATHS = [
   "/dashboard",
   "/vehicles",
+  "/vehicle-documents",
   "/drivers",
+  "/license-monitoring",
   "/trips",
+  "/trips/active",
+  "/trips/history",
   "/maintenance",
   "/fuel",
   "/expenses",
   "/reports",
+  "/reports/roi",
   "/settings",
 ] as const;
 

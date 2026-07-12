@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -11,6 +11,12 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { createTrip } from "@/lib/fleet/actions";
 import { tripSchema } from "@/lib/fleet/schemas";
+import {
+  assertDriverAssignable,
+  assertVehicleDispatchable,
+} from "@/lib/fleet/trip-lifecycle";
+import { ROLES } from "@/constants/roles";
+import { useSettingsStore } from "@/store/settings-store";
 import type { Driver, Vehicle } from "@/types/entities";
 
 interface TripFormDialogProps {
@@ -28,6 +34,33 @@ export function TripFormDialog({
 }: TripFormDialogProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const eligibleOnly = useSettingsStore(
+    (s) => s.byRole[ROLES.DISPATCHER].showOnlyEligibleInTripForm
+  );
+
+  const selectableVehicles = useMemo(() => {
+    if (!eligibleOnly) return vehicles;
+    return vehicles.filter((vehicle) => {
+      try {
+        assertVehicleDispatchable(vehicle);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+  }, [vehicles, eligibleOnly]);
+
+  const selectableDrivers = useMemo(() => {
+    if (!eligibleOnly) return drivers;
+    return drivers.filter((driver) => {
+      try {
+        assertDriverAssignable(driver);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+  }, [drivers, eligibleOnly]);
 
   const {
     register,
@@ -39,8 +72,8 @@ export function TripFormDialog({
       trip_number: "",
       source: "",
       destination: "",
-      vehicle_id: vehicles[0]?.id ?? "",
-      driver_id: drivers[0]?.id ?? "",
+      vehicle_id: selectableVehicles[0]?.id ?? "",
+      driver_id: selectableDrivers[0]?.id ?? "",
       cargo_weight: 0,
       planned_distance: 0,
       status: "Draft",
@@ -109,7 +142,7 @@ export function TripFormDialog({
             {...register("vehicle_id")}
           >
             <option value="">Select vehicle</option>
-            {vehicles.map((vehicle) => (
+            {selectableVehicles.map((vehicle) => (
               <option key={vehicle.id} value={vehicle.id}>
                 {vehicle.registration_number} — {vehicle.vehicle_name}
               </option>
@@ -122,7 +155,7 @@ export function TripFormDialog({
             {...register("driver_id")}
           >
             <option value="">Select driver</option>
-            {drivers.map((driver) => (
+            {selectableDrivers.map((driver) => (
               <option key={driver.id} value={driver.id}>
                 {driver.name}
               </option>

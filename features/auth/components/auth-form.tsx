@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Eye, EyeOff, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { TruckLoader } from "@/components/ui/truck-loader";
+import { TruckLoader, TruckLoaderInline } from "@/components/ui/truck-loader";
 import {
   Card,
   CardContent,
@@ -376,7 +376,7 @@ export function AuthForm() {
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">
-                  <TruckLoader size="sm" label="" className="!gap-0" />
+                  <TruckLoaderInline />
                   {isLogin ? "Signing in…" : "Creating account…"}
                 </span>
               ) : (

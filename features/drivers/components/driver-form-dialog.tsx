@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -9,17 +9,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { createDriver } from "@/lib/fleet/actions";
+import { createDriver, updateDriver } from "@/lib/fleet/actions";
 import { driverSchema } from "@/lib/fleet/schemas";
+import type { Driver } from "@/types/entities";
 
 interface DriverFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  driver?: Driver | null;
 }
 
-export function DriverFormDialog({ open, onOpenChange }: DriverFormDialogProps) {
+export function DriverFormDialog({ open, onOpenChange, driver }: DriverFormDialogProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const isEdit = Boolean(driver);
 
   const {
     register,
@@ -41,6 +44,21 @@ export function DriverFormDialog({ open, onOpenChange }: DriverFormDialogProps) 
     },
   });
 
+  useEffect(() => {
+    if (driver && open) {
+      reset({
+        name: driver.name,
+        license_number: driver.license_number,
+        license_category: driver.license_category as "HMV" | "LMV",
+        license_expiry: driver.license_expiry,
+        phone: driver.phone,
+        email: driver.email,
+        safety_score: driver.safety_score,
+        status: driver.status,
+      });
+    }
+  }, [driver, open, reset]);
+
   const onSubmit = handleSubmit(async (values) => {
     const parsed = driverSchema.safeParse(values);
     if (!parsed.success) {
@@ -49,7 +67,9 @@ export function DriverFormDialog({ open, onOpenChange }: DriverFormDialogProps) 
     }
 
     setSubmitting(true);
-    const result = await createDriver(parsed.data);
+    const result = isEdit && driver
+      ? await updateDriver(driver.id, parsed.data)
+      : await createDriver(parsed.data);
     setSubmitting(false);
 
     if (!result.success) {
@@ -57,8 +77,8 @@ export function DriverFormDialog({ open, onOpenChange }: DriverFormDialogProps) 
       return;
     }
 
-    toast.success("Driver added to roster");
-    reset();
+    toast.success(isEdit ? "Driver updated" : "Driver added to roster");
+    if (!isEdit) reset();
     onOpenChange(false);
     router.refresh();
   });
@@ -67,8 +87,8 @@ export function DriverFormDialog({ open, onOpenChange }: DriverFormDialogProps) 
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Add Driver"
-      description="Add a driver to the roster with license details."
+      title={isEdit ? "Edit Driver" : "Add Driver"}
+      description="Manage driver profile, license, and safety score."
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -144,7 +164,7 @@ export function DriverFormDialog({ open, onOpenChange }: DriverFormDialogProps) 
             Cancel
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? "Saving…" : "Add Driver"}
+            {submitting ? "Saving…" : isEdit ? "Save Changes" : "Add Driver"}
           </Button>
         </div>
       </form>

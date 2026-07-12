@@ -1,4 +1,14 @@
-import type { Driver, Trip, Vehicle } from "@/types/entities";
+import type {
+  AppNotification,
+  Driver,
+  ExpenseLog,
+  FuelLog,
+  MaintenanceLog,
+  Trip,
+  TripUpdate,
+  Vehicle,
+  VehicleDocument,
+} from "@/types/entities";
 
 type VehicleRow = {
   id: string;
@@ -79,5 +89,129 @@ export function mapTrip(row: TripRow): Trip {
     planned_distance: row.planned_distance,
     status: row.status,
     dispatch_time: row.dispatch_time,
+  };
+}
+
+export function mapMaintenance(row: {
+  id: string;
+  vehicle_id: string;
+  maintenance_type: string;
+  description: string;
+  cost: number | string;
+  service_center: string;
+  status: string;
+  opened_at: string;
+  closed_at?: string | null;
+}): MaintenanceLog {
+  return {
+    id: row.id,
+    vehicle_id: row.vehicle_id,
+    maintenance_type: row.maintenance_type,
+    description: row.description,
+    cost: Number(row.cost),
+    service_center: row.service_center,
+    status: row.status,
+    opened_at: row.opened_at,
+    closed_at: row.closed_at,
+  };
+}
+
+export function mapFuelLog(row: {
+  id: string;
+  vehicle_id: string;
+  trip_id?: string | null;
+  liters: number | string;
+  cost: number | string;
+  odometer: number;
+  date: string;
+}): FuelLog {
+  return {
+    id: row.id,
+    vehicle_id: row.vehicle_id,
+    trip_id: row.trip_id,
+    liters: Number(row.liters),
+    cost: Number(row.cost),
+    odometer: row.odometer,
+    date: row.date,
+  };
+}
+
+export function mapExpense(row: {
+  id: string;
+  vehicle_id: string;
+  trip_id?: string | null;
+  category: string;
+  amount: number | string;
+  description: string;
+  date: string;
+}): ExpenseLog {
+  return {
+    id: row.id,
+    vehicle_id: row.vehicle_id,
+    trip_id: row.trip_id,
+    category: row.category,
+    amount: Number(row.amount),
+    description: row.description,
+    date: row.date,
+  };
+}
+
+export function mapVehicleDocument(row: {
+  id: string;
+  vehicle_id: string;
+  document_type: string;
+  file_name: string;
+  storage_path?: string | null;
+  expiry_date?: string | null;
+  notes?: string | null;
+}): VehicleDocument {
+  return {
+    id: row.id,
+    vehicle_id: row.vehicle_id,
+    document_type: row.document_type,
+    file_name: row.file_name,
+    storage_path: row.storage_path,
+    expiry_date: row.expiry_date,
+    notes: row.notes,
+  };
+}
+
+export function mapTripUpdate(row: {
+  id: string;
+  trip_id: string;
+  actor_id?: string | null;
+  event_type: string;
+  message: string;
+  created_at: string;
+  profiles?: { full_name?: string | null } | null;
+}): TripUpdate {
+  return {
+    id: row.id,
+    trip_id: row.trip_id,
+    actor_id: row.actor_id,
+    actor_name: row.profiles?.full_name ?? null,
+    event_type: row.event_type,
+    message: row.message,
+    created_at: row.created_at,
+  };
+}
+
+export function mapNotification(row: {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  link?: string | null;
+  read_at?: string | null;
+  created_at: string;
+}): AppNotification {
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    title: row.title,
+    message: row.message,
+    link: row.link,
+    read_at: row.read_at,
+    created_at: row.created_at,
   };
 }

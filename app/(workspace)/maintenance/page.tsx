@@ -1,86 +1,39 @@
-"use client";
+import { FleetDataError } from "@/components/data/fleet-data-error";
+import { MaintenanceModule } from "@/features/maintenance/components/maintenance-module";
+import { canManageMaintenance } from "@/lib/fleet/permissions";
+import { getPageRole } from "@/lib/fleet/page-role";
+import { getFleetLabels, getMaintenanceLogs, getVehicles } from "@/lib/fleet/queries";
 
-import { useMemo, useState } from "react";
-import { DataTable, type DataTableColumn } from "@/components/data/data-table";
-import { ModuleFilters } from "@/components/data/module-filters";
-import { ModulePage } from "@/components/data/module-page";
-import { StatusBadge } from "@/components/data/status-badge";
-import { MOCK_MAINTENANCE, getVehicleLabel } from "@/lib/mock-data";
+export default async function MaintenancePage() {
+  const role = await getPageRole();
+  const [recordsResult, labelsResult, vehiclesResult] = await Promise.all([
+    getMaintenanceLogs(),
+    getFleetLabels(),
+    getVehicles(),
+  ]);
 
-const columns: DataTableColumn<(typeof MOCK_MAINTENANCE)[0]>[] = [
-  {
-    key: "vehicle",
-    header: "Vehicle",
-    cell: (r) => (
-      <span className="font-medium">{getVehicleLabel(r.vehicle_id)}</span>
-    ),
-  },
-  { key: "type", header: "Type", cell: (r) => r.maintenance_type },
-  { key: "description", header: "Description", cell: (r) => r.description },
-  { key: "center", header: "Service Center", cell: (r) => r.service_center },
-  {
-    key: "cost",
-    header: "Cost (₹)",
-    className: "text-right",
-    cell: (r) => r.cost.toLocaleString(),
-  },
-  { key: "opened", header: "Opened", cell: (r) => r.opened_at },
-  {
-    key: "status",
-    header: "Status",
-    cell: (r) => <StatusBadge status={r.status} />,
-  },
-];
+  if (recordsResult.error || !recordsResult.data) {
+    return (
+      <FleetDataError
+        message={recordsResult.error ?? "Run migration 007_ops_tables.sql"}
+      />
+    );
+  }
 
-export default function MaintenancePage() {
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  if (labelsResult.error || !labelsResult.data) {
+    return <FleetDataError message={labelsResult.error ?? "Unknown error"} />;
+  }
 
-  const filtered = useMemo(() => {
-    return MOCK_MAINTENANCE.filter((row) => {
-      const q = search.toLowerCase();
-      const vehicle = getVehicleLabel(row.vehicle_id).toLowerCase();
-      const matchesSearch =
-        !q ||
-        vehicle.includes(q) ||
-        row.maintenance_type.toLowerCase().includes(q) ||
-        row.service_center.toLowerCase().includes(q);
-      const matchesStatus = status === "all" || row.status === status;
-      return matchesSearch && matchesStatus;
-    });
-  }, [search, status]);
+  if (vehiclesResult.error || !vehiclesResult.data) {
+    return <FleetDataError message={vehiclesResult.error ?? "Unknown error"} />;
+  }
 
   return (
-    <ModulePage
-      title="Maintenance"
-      description="Vehicle maintenance logs and service tracking"
-      filters={
-        <ModuleFilters
-          search={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search vehicle, type, center…"
-          filters={[
-            {
-              id: "maint-status",
-              label: "Status",
-              options: [
-                { label: "All", value: "all" },
-                { label: "In Progress", value: "In Progress" },
-                { label: "Completed", value: "Completed" },
-              ],
-              value: status,
-              onChange: setStatus,
-            },
-          ]}
-        />
-      }
-    >
-      <DataTable
-        columns={columns}
-        data={filtered}
-        getRowId={(r) => r.id}
-        emptyMessage="No maintenance records found."
-      />
-    </ModulePage>
+    <MaintenanceModule
+      records={recordsResult.data}
+      vehicles={vehiclesResult.data}
+      vehicleLabels={labelsResult.data.vehicles}
+      canManage={canManageMaintenance(role)}
+    />
   );
 }

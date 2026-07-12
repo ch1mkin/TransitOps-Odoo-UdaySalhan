@@ -1,6 +1,7 @@
 "use client";
 
 import { useEnsureWorkspaceTab, useWorkspaceNavigation } from "@/hooks/use-workspace";
+import { RouteGuard } from "@/components/access/route-guard";
 import { LinkedWorkspaceHeader } from "./linked-workspace-header";
 import { ModulePanelRail } from "./module-panel";
 import { PopoutLayer } from "./popout-window";
@@ -26,7 +27,7 @@ export function WorkspaceChrome({
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
-      <LinkedWorkspaceHeader />
+      <LinkedWorkspaceHeader userId={userId} />
 
       <div className="flex flex-1 overflow-hidden">
         <WorkspaceSidebar role={role} userName={userName} userId={userId} />
@@ -36,7 +37,7 @@ export function WorkspaceChrome({
 
           <div className="flex min-h-0 flex-1 overflow-hidden">
             <main className="min-w-0 flex-1 overflow-y-auto bg-background p-6">
-              {children}
+              <RouteGuard role={role}>{children}</RouteGuard>
             </main>
             <ModulePanelRail />
           </div>

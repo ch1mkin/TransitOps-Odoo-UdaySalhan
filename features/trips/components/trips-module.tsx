@@ -8,6 +8,7 @@ import { ModulePage } from "@/components/data/module-page";
 import { RowActions } from "@/components/data/row-actions";
 import { StatusBadge } from "@/components/data/status-badge";
 import { Button } from "@/components/ui/button";
+import { ExportButton } from "@/components/data/export-button";
 import { TripFormDialog } from "@/features/trips/components/trip-form-dialog";
 import { useEntityTab } from "@/hooks/use-entity-tab";
 import type { Driver, Trip, Vehicle } from "@/types/entities";
@@ -27,6 +28,7 @@ interface TripsModuleProps {
   vehicleLabels: Record<string, string>;
   driverLabels: Record<string, string>;
   canCreate?: boolean;
+  view?: "create" | "active" | "history" | "all";
 }
 
 export function TripsModule({
@@ -36,11 +38,33 @@ export function TripsModule({
   vehicleLabels,
   driverLabels,
   canCreate = false,
+  view = "all",
 }: TripsModuleProps) {
   const { openEntity, popoutEntity } = useEntityTab();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState(
+    view === "active" ? "Dispatched" : view === "history" ? "history" : "all"
+  );
   const [formOpen, setFormOpen] = useState(false);
+
+  const viewMeta = {
+    create: {
+      title: "Create Trip",
+      description: "Plan a new trip and assign an available vehicle and eligible driver",
+    },
+    active: {
+      title: "Active Trips",
+      description: "Dispatched trips currently in progress",
+    },
+    history: {
+      title: "Trip History",
+      description: "Completed and cancelled trips",
+    },
+    all: {
+      title: "Trips",
+      description: "Dispatch and track trips across your fleet",
+    },
+  }[view];
 
   const columns: DataTableColumn<Trip>[] = useMemo(
     () => [
@@ -101,24 +125,54 @@ export function TripsModule({
           .includes(search.toLowerCase());
 
       const matchesStatus =
-        statusFilter === "all" || trip.status === statusFilter;
+        statusFilter === "all"
+          ? view === "create"
+            ? trip.status === "Draft" || trip.status === "Dispatched"
+            : true
+          : statusFilter === "history"
+            ? trip.status === "Completed" || trip.status === "Cancelled"
+            : trip.status === statusFilter;
 
       return matchesSearch && matchesStatus;
     });
-  }, [trips, search, statusFilter, vehicleLabels, driverLabels]);
+  }, [trips, search, statusFilter, vehicleLabels, driverLabels, view]);
+
+  const statusOptions =
+    view === "history"
+      ? [{ label: "History", value: "history" }]
+      : view === "active"
+        ? [{ label: "Dispatched", value: "Dispatched" }]
+        : STATUS_OPTIONS;
 
   return (
     <>
       <ModulePage
-        title="Trips"
-        description="Dispatch and track trips across your fleet"
+        title={viewMeta.title}
+        description={viewMeta.description}
         actions={
-          canCreate ? (
-            <Button size="sm" onClick={() => setFormOpen(true)}>
-              <Plus className="size-4" />
-              New Trip
-            </Button>
-          ) : undefined
+          <div className="flex gap-2">
+            <ExportButton
+              filename="trips"
+              rows={filtered}
+              sheetName="Trips"
+              columns={[
+                { header: "Trip No.", value: (r) => r.trip_number },
+                { header: "Source", value: (r) => r.source },
+                { header: "Destination", value: (r) => r.destination },
+                { header: "Vehicle", value: (r) => vehicleLabels[r.vehicle_id] ?? "" },
+                { header: "Driver", value: (r) => driverLabels[r.driver_id] ?? "" },
+                { header: "Cargo (kg)", value: (r) => r.cargo_weight },
+                { header: "Distance (km)", value: (r) => r.planned_distance },
+                { header: "Status", value: (r) => r.status },
+              ]}
+            />
+            {canCreate ? (
+              <Button size="sm" onClick={() => setFormOpen(true)}>
+                <Plus className="size-4" />
+                New Trip
+              </Button>
+            ) : null}
+          </div>
         }
         filters={
           <ModuleFilters
@@ -129,7 +183,7 @@ export function TripsModule({
               {
                 id: "trip-status",
                 label: "Trip Status",
-                options: STATUS_OPTIONS,
+                options: statusOptions,
                 value: statusFilter,
                 onChange: setStatusFilter,
               },

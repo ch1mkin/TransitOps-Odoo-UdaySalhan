@@ -1,26 +1,11 @@
 import { FleetDataError } from "@/components/data/fleet-data-error";
 import { VehiclesModule } from "@/features/vehicles/components/vehicles-module";
-import { canManageVehicles } from "@/lib/fleet/permissions";
+import { canChangeVehicleStatus, canManageVehicles } from "@/lib/fleet/permissions";
+import { getPageRole } from "@/lib/fleet/page-role";
 import { getVehicles } from "@/lib/fleet/queries";
-import { createClient } from "@/lib/supabase/server";
-import { ROLES, type Role } from "@/constants/roles";
-import type { Profile } from "@/types";
 
 export default async function VehiclesPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: profile } = user
-    ? await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single<Pick<Profile, "role">>()
-    : { data: null };
-
-  const role = (profile?.role ?? ROLES.FLEET_MANAGER) as Role;
+  const role = await getPageRole();
   const result = await getVehicles();
 
   if (result.error || !result.data) {
@@ -28,6 +13,10 @@ export default async function VehiclesPage() {
   }
 
   return (
-    <VehiclesModule vehicles={result.data} canCreate={canManageVehicles(role)} />
+    <VehiclesModule
+      vehicles={result.data}
+      canCreate={canManageVehicles(role)}
+      canChangeStatus={canChangeVehicleStatus(role)}
+    />
   );
 }

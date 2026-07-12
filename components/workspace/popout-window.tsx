@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Maximize2, Minus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PopoutContent } from "@/components/workspace/popout-content";
@@ -13,6 +14,7 @@ interface PopoutWindowFrameProps {
 }
 
 export function PopoutWindowFrame({ popout }: PopoutWindowFrameProps) {
+  const router = useRouter();
   const dockPopout = useWorkspaceStore((s) => s.dockPopout);
   const closePopout = useWorkspaceStore((s) => s.closePopout);
   const minimizePopout = useWorkspaceStore((s) => s.minimizePopout);
@@ -22,6 +24,13 @@ export function PopoutWindowFrame({ popout }: PopoutWindowFrameProps) {
 
   const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  const mergeIntoTabs = () => {
+    const href = dockPopout(popout.id);
+    if (href) {
+      router.push(href);
+    }
+  };
 
   const onPointerDown = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest("button")) return;
@@ -92,15 +101,16 @@ export function PopoutWindowFrame({ popout }: PopoutWindowFrameProps) {
           </div>
           <span className="truncate text-xs font-semibold">{popout.title}</span>
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center gap-0.5">
           <Button
             variant="ghost"
-            size="icon"
-            className="size-7"
-            onClick={() => dockPopout(popout.id)}
-            aria-label="Dock window"
+            size="sm"
+            className="h-7 gap-1 px-2 text-[11px]"
+            onClick={mergeIntoTabs}
+            aria-label="Merge into tabs"
           >
             <Maximize2 className="size-3.5" />
+            Merge
           </Button>
           <Button
             variant="ghost"
@@ -115,8 +125,11 @@ export function PopoutWindowFrame({ popout }: PopoutWindowFrameProps) {
             variant="ghost"
             size="icon"
             className="size-7"
-            onClick={() => closePopout(popout.id)}
-            aria-label="Close window"
+            onClick={() => {
+              const href = closePopout(popout.id);
+              if (href) router.push(href);
+            }}
+            aria-label="Merge into tabs and close window"
           >
             <X className="size-3.5" />
           </Button>

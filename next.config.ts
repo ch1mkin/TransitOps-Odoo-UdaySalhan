@@ -1,13 +1,11 @@
 import type { NextConfig } from "next";
-import os from "os";
 import path from "path";
 
-// Build output outside "Uday's Portable" — apostrophes in the project path
-// corrupt webpack chunks on external drives (e.g. Cannot find module './749.js').
-export const NEXT_DIST_DIR = path.join(os.tmpdir(), "transitops-next");
+const projectRoot = path.resolve(__dirname);
 
 const nextConfig: NextConfig = {
-  distDir: NEXT_DIST_DIR,
+  // Keep .next inside the project. A remote distDir (/tmp) breaks the RSC client
+  // manifest in dev (segment-explorer-node / __webpack_modules__ errors).
   images: {
     remotePatterns: [
       {
@@ -18,8 +16,30 @@ const nextConfig: NextConfig = {
   },
   webpack: (config, { dev }) => {
     if (dev) {
+      // Avoid stale chunks on external volumes and paths with special characters.
       config.cache = false;
+      config.snapshot = {
+        ...config.snapshot,
+        managedPaths: [],
+      };
+      // Polling helps external/USB volumes where native file events are unreliable.
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 600,
+        ignored: ["**/.git/**", "**/node_modules/**"],
+      };
     }
+
+    // Normalize resolution from the project root (helps apostrophe paths on external drives).
+    config.resolve = {
+      ...config.resolve,
+      symlinks: true,
+      modules: [
+        path.join(projectRoot, "node_modules"),
+        ...(config.resolve?.modules ?? ["node_modules"]),
+      ],
+    };
+
     return config;
   },
 };

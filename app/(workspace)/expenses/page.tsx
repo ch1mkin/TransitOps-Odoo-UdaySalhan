@@ -1,84 +1,37 @@
-"use client";
+import { FleetDataError } from "@/components/data/fleet-data-error";
+import { ExpensesModule } from "@/features/expenses/components/expenses-module";
+import { canManageExpenses } from "@/lib/fleet/permissions";
+import { getPageRole } from "@/lib/fleet/page-role";
+import { getExpenses, getFleetLabels, getVehicles } from "@/lib/fleet/queries";
 
-import { useMemo, useState } from "react";
-import { DataTable, type DataTableColumn } from "@/components/data/data-table";
-import { ModuleFilters } from "@/components/data/module-filters";
-import { ModulePage } from "@/components/data/module-page";
-import { MOCK_EXPENSES, getVehicleLabel } from "@/lib/mock-data";
+export default async function ExpensesPage() {
+  const role = await getPageRole();
+  const [recordsResult, labelsResult, vehiclesResult] = await Promise.all([
+    getExpenses(),
+    getFleetLabels(),
+    getVehicles(),
+  ]);
 
-const columns: DataTableColumn<(typeof MOCK_EXPENSES)[0]>[] = [
-  {
-    key: "category",
-    header: "Category",
-    cell: (r) => <span className="font-medium">{r.category}</span>,
-  },
-  {
-    key: "vehicle",
-    header: "Vehicle",
-    cell: (r) => getVehicleLabel(r.vehicle_id),
-  },
-  {
-    key: "amount",
-    header: "Amount (₹)",
-    className: "text-right",
-    cell: (r) => r.amount.toLocaleString(),
-  },
-  { key: "description", header: "Description", cell: (r) => r.description },
-  { key: "date", header: "Date", cell: (r) => r.date },
-];
+  if (recordsResult.error || !recordsResult.data) {
+    return (
+      <FleetDataError message={recordsResult.error ?? "Run migration 007_ops_tables.sql"} />
+    );
+  }
 
-export default function ExpensesPage() {
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("all");
+  if (labelsResult.error || !labelsResult.data) {
+    return <FleetDataError message={labelsResult.error ?? "Unknown error"} />;
+  }
 
-  const filtered = useMemo(() => {
-    return MOCK_EXPENSES.filter((r) => {
-      const q = search.toLowerCase();
-      const matchesSearch =
-        !q ||
-        r.category.toLowerCase().includes(q) ||
-        getVehicleLabel(r.vehicle_id).toLowerCase().includes(q) ||
-        r.description.toLowerCase().includes(q);
-      const matchesCategory = category === "all" || r.category === category;
-      return matchesSearch && matchesCategory;
-    });
-  }, [search, category]);
+  if (vehiclesResult.error || !vehiclesResult.data) {
+    return <FleetDataError message={vehiclesResult.error ?? "Unknown error"} />;
+  }
 
   return (
-    <ModulePage
-      title="Expenses"
-      description="Operational expense tracking and categorization"
-      filters={
-        <ModuleFilters
-          search={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search category, vehicle, description…"
-          filters={[
-            {
-              id: "expense-cat",
-              label: "Category",
-              options: [
-                { label: "All", value: "all" },
-                { label: "Tolls", value: "Tolls" },
-                { label: "Repairs", value: "Repairs" },
-                { label: "Permits", value: "Permits" },
-                { label: "Parking", value: "Parking" },
-                { label: "Fines", value: "Fines" },
-                { label: "Loading", value: "Loading" },
-              ],
-              value: category,
-              onChange: setCategory,
-            },
-          ]}
-        />
-      }
-    >
-      <DataTable
-        columns={columns}
-        data={filtered}
-        getRowId={(r) => r.id}
-        emptyMessage="No expenses found."
-      />
-    </ModulePage>
+    <ExpensesModule
+      records={recordsResult.data}
+      vehicles={vehiclesResult.data}
+      vehicleLabels={labelsResult.data.vehicles}
+      canManage={canManageExpenses(role)}
+    />
   );
 }

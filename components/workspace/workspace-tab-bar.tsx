@@ -16,17 +16,26 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { X } from "lucide-react";
+import { ExternalLink, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWorkspaceStore } from "@/store/workspace-store";
 import { cn } from "@/lib/utils";
 import type { WorkspaceTab } from "@/types";
 
-function SortableTab({ tab, isActive }: { tab: WorkspaceTab; isActive: boolean }) {
+function SortableTab({
+  tab,
+  isActive,
+  isPoppedOut,
+}: {
+  tab: WorkspaceTab;
+  isActive: boolean;
+  isPoppedOut: boolean;
+}) {
   const router = useRouter();
   const closeTab = useWorkspaceStore((s) => s.closeTab);
   const setActiveTab = useWorkspaceStore((s) => s.setActiveTab);
   const popoutTab = useWorkspaceStore((s) => s.popoutTab);
+  const dockPopoutForTab = useWorkspaceStore((s) => s.dockPopoutForTab);
 
   const {
     attributes,
@@ -43,6 +52,13 @@ function SortableTab({ tab, isActive }: { tab: WorkspaceTab; isActive: boolean }
   };
 
   const handleActivate = () => {
+    if (isPoppedOut) {
+      const href = dockPopoutForTab(tab.id);
+      setActiveTab(tab.id);
+      router.push(href ?? tab.href);
+      return;
+    }
+
     setActiveTab(tab.id);
     router.push(tab.href);
   };
@@ -56,6 +72,7 @@ function SortableTab({ tab, isActive }: { tab: WorkspaceTab; isActive: boolean }
         isActive
           ? "z-10 border-border bg-workspace-tab-active text-foreground workspace-shadow"
           : "border-transparent bg-workspace-tab text-muted-foreground hover:bg-slate-200/70",
+        isPoppedOut && !isActive && "ring-1 ring-accent/30",
         isDragging && "z-50 opacity-80 shadow-lg"
       )}
     >
@@ -64,6 +81,11 @@ function SortableTab({ tab, isActive }: { tab: WorkspaceTab; isActive: boolean }
         className="flex min-w-0 flex-1 cursor-grab items-center gap-1.5 active:cursor-grabbing"
         onClick={handleActivate}
         onDoubleClick={() => popoutTab(tab.id)}
+        title={
+          isPoppedOut
+            ? "Click to merge into main view · Double-click to focus pop-out"
+            : "Click to open · Double-click to pop out"
+        }
         {...attributes}
         {...listeners}
       >
@@ -71,6 +93,9 @@ function SortableTab({ tab, isActive }: { tab: WorkspaceTab; isActive: boolean }
           {tab.title.charAt(0).toUpperCase()}
         </span>
         <span className="truncate font-medium">{tab.title}</span>
+        {isPoppedOut ? (
+          <ExternalLink className="size-3 shrink-0 text-accent" aria-hidden />
+        ) : null}
       </button>
 
       <button
@@ -91,6 +116,7 @@ function SortableTab({ tab, isActive }: { tab: WorkspaceTab; isActive: boolean }
 export function WorkspaceTabBar() {
   const tabs = useWorkspaceStore((s) => s.tabs);
   const activeTabId = useWorkspaceStore((s) => s.activeTabId);
+  const popouts = useWorkspaceStore((s) => s.popouts);
   const reorderTabs = useWorkspaceStore((s) => s.reorderTabs);
 
   const sensors = useSensors(
@@ -107,11 +133,13 @@ export function WorkspaceTabBar() {
     }
   };
 
+  const poppedOutTabIds = new Set(popouts.map((p) => p.tabId));
+
   if (tabs.length === 0) {
     return (
       <div className="flex h-9 items-center border-b border-border bg-workspace-tab px-4">
         <p className="text-[11px] text-muted-foreground">
-          Open a driver, vehicle, trip, or profile to pin it here — sections stay in the sidebar
+          Open a driver, vehicle, trip, or profile to pin it here — tabs stay until you close them
         </p>
       </div>
     );
@@ -133,6 +161,7 @@ export function WorkspaceTabBar() {
               key={tab.id}
               tab={tab}
               isActive={activeTabId === tab.id}
+              isPoppedOut={poppedOutTabIds.has(tab.id)}
             />
           ))}
         </SortableContext>

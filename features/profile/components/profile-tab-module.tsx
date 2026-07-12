@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ROLE_LABELS, ROLES, type Role } from "@/constants/roles";
 import { EntityDetailModule } from "@/components/data/entity-detail-module";
 import { TruckLoader } from "@/components/ui/truck-loader";
+import { ProfileEditForm } from "@/features/profile/components/profile-edit-form";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/types";
 
@@ -77,22 +78,27 @@ export function ProfileTabModule({
   const email = profile?.email ?? "—";
 
   return (
-    <EntityDetailModule
-      title={displayName}
-      subtitle="User Profile"
-      entityType="profile"
-      entityId={profile?.id ?? userId ?? "profile"}
-      href="/profile"
-      compact={compact}
-      fields={[
-        { label: "Full Name", value: displayName },
-        { label: "Email", value: email },
-        { label: "Role", value: ROLE_LABELS[displayRole] },
-        {
-          label: "Workspace",
-          value: "Pinned tab — survives section navigation",
-        },
-      ]}
-    />
+    <div className="space-y-4">
+      <EntityDetailModule
+        title={displayName}
+        subtitle="User Profile"
+        entityType="profile"
+        entityId={profile?.id ?? userId ?? "profile"}
+        href="/profile"
+        compact={compact}
+        fields={[
+          { label: "Full Name", value: displayName },
+          { label: "Email", value: email },
+          { label: "Role", value: ROLE_LABELS[displayRole] },
+          {
+            label: "Workspace",
+            value: "Pinned tab — survives section navigation",
+          },
+        ]}
+      />
+      {!compact && (
+        <ProfileEditForm fullName={displayName} email={email} />
+      )}
+    </div>
   );
 }

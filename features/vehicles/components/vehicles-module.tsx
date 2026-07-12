@@ -8,9 +8,13 @@ import { ModulePage } from "@/components/data/module-page";
 import { RowActions } from "@/components/data/row-actions";
 import { StatusBadge } from "@/components/data/status-badge";
 import { Button } from "@/components/ui/button";
+import { InlineStatusSelect } from "@/components/data/inline-status-select";
+import { ExportButton } from "@/components/data/export-button";
 import { VehicleFormDialog } from "@/features/vehicles/components/vehicle-form-dialog";
+import { updateVehicleStatus } from "@/lib/fleet/actions";
+import { MANUAL_VEHICLE_STATUSES } from "@/lib/fleet/status-rules";
 import { useEntityTab } from "@/hooks/use-entity-tab";
-import type { Vehicle } from "@/types/entities";
+import type { Vehicle, VehicleStatus } from "@/types/entities";
 
 const STATUS_OPTIONS = [
   { label: "All statuses", value: "all" },
@@ -27,59 +31,99 @@ const TYPE_OPTIONS = [
   { label: "Light Truck", value: "Light Truck" },
 ];
 
-const columns: DataTableColumn<Vehicle>[] = [
-  {
-    key: "registration",
-    header: "Registration",
-    cell: (row) => (
-      <span className="font-medium">{row.registration_number}</span>
-    ),
-  },
-  {
-    key: "name",
-    header: "Vehicle Name",
-    cell: (row) => row.vehicle_name,
-  },
-  {
-    key: "model",
-    header: "Model",
-    cell: (row) => row.vehicle_model,
-  },
-  {
-    key: "type",
-    header: "Type",
-    cell: (row) => row.vehicle_type,
-  },
-  {
-    key: "capacity",
-    header: "Capacity (kg)",
-    className: "text-right",
-    cell: (row) => row.max_load_capacity.toLocaleString(),
-  },
-  {
-    key: "odometer",
-    header: "Odometer",
-    className: "text-right",
-    cell: (row) => `${row.odometer.toLocaleString()} km`,
-  },
-  {
-    key: "status",
-    header: "Status",
-    cell: (row) => <StatusBadge status={row.status} />,
-  },
-];
-
 interface VehiclesModuleProps {
   vehicles: Vehicle[];
   canCreate?: boolean;
+  canChangeStatus?: boolean;
 }
 
-export function VehiclesModule({ vehicles, canCreate = false }: VehiclesModuleProps) {
+export function VehiclesModule({
+  vehicles,
+  canCreate = false,
+  canChangeStatus = false,
+}: VehiclesModuleProps) {
   const { openEntity, popoutEntity } = useEntityTab();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [formOpen, setFormOpen] = useState(false);
+
+  const columns: DataTableColumn<Vehicle>[] = useMemo(
+    () => [
+      {
+        key: "registration",
+        header: "Registration",
+        sortValue: (row) => row.registration_number,
+        cell: (row) => (
+          <span className="font-medium">{row.registration_number}</span>
+        ),
+      },
+      {
+        key: "name",
+        header: "Vehicle Name",
+        sortValue: (row) => row.vehicle_name,
+        cell: (row) => row.vehicle_name,
+      },
+      {
+        key: "model",
+        header: "Model",
+        sortValue: (row) => row.vehicle_model,
+        cell: (row) => row.vehicle_model,
+      },
+      {
+        key: "type",
+        header: "Type",
+        sortValue: (row) => row.vehicle_type,
+        cell: (row) => row.vehicle_type,
+      },
+      {
+        key: "capacity",
+        header: "Capacity (kg)",
+        className: "text-right",
+        sortValue: (row) => row.max_load_capacity,
+        cell: (row) => row.max_load_capacity.toLocaleString(),
+      },
+      {
+        key: "odometer",
+        header: "Odometer",
+        className: "text-right",
+        sortValue: (row) => row.odometer,
+        cell: (row) => `${row.odometer.toLocaleString()} km`,
+      },
+      {
+        key: "status",
+        header: "Status",
+        sortValue: (row) => row.status,
+        cell: (row) =>
+          canChangeStatus ? (
+            <InlineStatusSelect
+              value={row.status}
+              options={MANUAL_VEHICLE_STATUSES}
+              disabled={row.status === "On Trip"}
+              confirmChange={(next) =>
+                next === "Retired"
+                  ? {
+                      title: "Retire vehicle?",
+                      description:
+                        "This vehicle will be removed from dispatch and marked as retired.",
+                      destructive: true,
+                    }
+                  : null
+              }
+              onChange={async (status) => {
+                const result = await updateVehicleStatus(row.id, status as VehicleStatus);
+                return result.success
+                  ? { success: true }
+                  : { success: false, error: result.error };
+              }}
+            />
+          ) : (
+            <StatusBadge status={row.status} />
+          ),
+      },
+    ],
+    [canChangeStatus]
+  );
 
   const filtered = useMemo(() => {
     return vehicles.filter((vehicle) => {
@@ -102,16 +146,32 @@ export function VehiclesModule({ vehicles, canCreate = false }: VehiclesModulePr
   return (
     <>
       <ModulePage
-        title="Vehicles"
-        description="Fleet registry — live data from Supabase"
+        title="Vehicle Registry"
+        description="Fleet registry — update status, edit, or retire vehicles"
         actions={
-          canCreate ? (
+        <div className="flex gap-2">
+          <ExportButton
+            filename="vehicles"
+            rows={filtered}
+            sheetName="Vehicles"
+            columns={[
+              { header: "Registration", value: (r) => r.registration_number },
+              { header: "Name", value: (r) => r.vehicle_name },
+              { header: "Model", value: (r) => r.vehicle_model },
+              { header: "Type", value: (r) => r.vehicle_type },
+              { header: "Capacity (kg)", value: (r) => r.max_load_capacity },
+              { header: "Odometer", value: (r) => r.odometer },
+              { header: "Status", value: (r) => r.status },
+            ]}
+          />
+          {canCreate ? (
             <Button size="sm" onClick={() => setFormOpen(true)}>
               <Plus className="size-4" />
               Add Vehicle
             </Button>
-          ) : undefined
-        }
+          ) : null}
+        </div>
+      }
         filters={
           <ModuleFilters
             search={search}

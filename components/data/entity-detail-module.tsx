@@ -21,6 +21,7 @@ interface EntityDetailModuleProps {
   entityId: string;
   href: string;
   compact?: boolean;
+  actions?: React.ReactNode;
 }
 
 export function EntityDetailModule({
@@ -32,6 +33,7 @@ export function EntityDetailModule({
   entityId,
   href,
   compact = false,
+  actions,
 }: EntityDetailModuleProps) {
   const popoutTab = useWorkspaceStore((s) => s.popoutTab);
   const tabs = useWorkspaceStore((s) => s.tabs);
@@ -57,7 +59,8 @@ export function EntityDetailModule({
           )}
         </div>
         {!compact && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {actions}
             <Link
               href={href.split("/").slice(0, -1).join("/") || "/"}
               className="inline-flex h-8 items-center justify-center rounded-lg border border-border bg-card px-3 text-xs font-medium hover:bg-muted"

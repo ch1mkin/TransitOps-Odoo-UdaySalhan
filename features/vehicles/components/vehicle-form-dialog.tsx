@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -9,17 +9,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { createVehicle } from "@/lib/fleet/actions";
+import { createVehicle, updateVehicle } from "@/lib/fleet/actions";
 import { vehicleSchema } from "@/lib/fleet/schemas";
+import type { Vehicle } from "@/types/entities";
 
 interface VehicleFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  vehicle?: Vehicle | null;
 }
 
-export function VehicleFormDialog({ open, onOpenChange }: VehicleFormDialogProps) {
+export function VehicleFormDialog({
+  open,
+  onOpenChange,
+  vehicle,
+}: VehicleFormDialogProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const isEdit = Boolean(vehicle);
 
   const {
     register,
@@ -40,6 +47,22 @@ export function VehicleFormDialog({ open, onOpenChange }: VehicleFormDialogProps
     },
   });
 
+  useEffect(() => {
+    if (vehicle && open) {
+      reset({
+        registration_number: vehicle.registration_number,
+        vehicle_name: vehicle.vehicle_name,
+        vehicle_model: vehicle.vehicle_model,
+        vehicle_type: vehicle.vehicle_type as "Heavy Truck" | "Medium Truck" | "Light Truck",
+        max_load_capacity: vehicle.max_load_capacity,
+        status: vehicle.status,
+        odometer: vehicle.odometer,
+        acquisition_cost: vehicle.acquisition_cost,
+        purchase_date: vehicle.purchase_date,
+      });
+    }
+  }, [vehicle, open, reset]);
+
   const onSubmit = handleSubmit(async (values) => {
     const parsed = vehicleSchema.safeParse(values);
     if (!parsed.success) {
@@ -48,7 +71,10 @@ export function VehicleFormDialog({ open, onOpenChange }: VehicleFormDialogProps
     }
 
     setSubmitting(true);
-    const result = await createVehicle(parsed.data);
+    const result =
+      isEdit && vehicle
+        ? await updateVehicle(vehicle.id, parsed.data)
+        : await createVehicle(parsed.data);
     setSubmitting(false);
 
     if (!result.success) {
@@ -56,8 +82,8 @@ export function VehicleFormDialog({ open, onOpenChange }: VehicleFormDialogProps
       return;
     }
 
-    toast.success("Vehicle added to fleet");
-    reset();
+    toast.success(isEdit ? "Vehicle updated" : "Vehicle added to fleet");
+    if (!isEdit) reset();
     onOpenChange(false);
     router.refresh();
   });
@@ -66,8 +92,12 @@ export function VehicleFormDialog({ open, onOpenChange }: VehicleFormDialogProps
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Add Vehicle"
-      description="Register a new vehicle in the fleet."
+      title={isEdit ? "Edit Vehicle" : "Add Vehicle"}
+      description={
+        isEdit
+          ? "Update vehicle registry details."
+          : "Register a new vehicle in the fleet."
+      }
     >
       <form onSubmit={onSubmit} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -88,17 +118,11 @@ export function VehicleFormDialog({ open, onOpenChange }: VehicleFormDialogProps
           <div className="space-y-1.5">
             <Label htmlFor="vehicle_name">Vehicle Name</Label>
             <Input id="vehicle_name" {...register("vehicle_name")} />
-            {errors.vehicle_name && (
-              <p className="text-xs text-destructive">{errors.vehicle_name.message}</p>
-            )}
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="vehicle_model">Model</Label>
             <Input id="vehicle_model" {...register("vehicle_model")} />
-            {errors.vehicle_model && (
-              <p className="text-xs text-destructive">{errors.vehicle_model.message}</p>
-            )}
           </div>
 
           <Select label="Type" error={errors.vehicle_type?.message} {...register("vehicle_type")}>
@@ -116,16 +140,7 @@ export function VehicleFormDialog({ open, onOpenChange }: VehicleFormDialogProps
 
           <div className="space-y-1.5">
             <Label htmlFor="max_load_capacity">Max Capacity (kg)</Label>
-            <Input
-              id="max_load_capacity"
-              type="number"
-              {...register("max_load_capacity")}
-            />
-            {errors.max_load_capacity && (
-              <p className="text-xs text-destructive">
-                {errors.max_load_capacity.message}
-              </p>
-            )}
+            <Input id="max_load_capacity" type="number" {...register("max_load_capacity")} />
           </div>
 
           <div className="space-y-1.5">
@@ -135,19 +150,12 @@ export function VehicleFormDialog({ open, onOpenChange }: VehicleFormDialogProps
 
           <div className="space-y-1.5">
             <Label htmlFor="acquisition_cost">Acquisition Cost (₹)</Label>
-            <Input
-              id="acquisition_cost"
-              type="number"
-              {...register("acquisition_cost")}
-            />
+            <Input id="acquisition_cost" type="number" {...register("acquisition_cost")} />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="purchase_date">Purchase Date</Label>
             <Input id="purchase_date" type="date" {...register("purchase_date")} />
-            {errors.purchase_date && (
-              <p className="text-xs text-destructive">{errors.purchase_date.message}</p>
-            )}
           </div>
         </div>
 
@@ -156,7 +164,7 @@ export function VehicleFormDialog({ open, onOpenChange }: VehicleFormDialogProps
             Cancel
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? "Saving…" : "Add Vehicle"}
+            {submitting ? "Saving…" : isEdit ? "Save Changes" : "Add Vehicle"}
           </Button>
         </div>
       </form>

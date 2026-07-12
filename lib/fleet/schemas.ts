@@ -34,6 +34,46 @@ export const tripSchema = z.object({
   status: z.enum(["Draft", "Dispatched", "Completed", "Cancelled"]),
 });
 
+export const maintenanceSchema = z.object({
+  vehicle_id: z.string().uuid("Select a vehicle"),
+  maintenance_type: z.string().min(2, "Maintenance type is required"),
+  description: z.string().min(3, "Description is required"),
+  cost: z.coerce.number().min(0),
+  service_center: z.string().min(2, "Service center is required"),
+  opened_at: z.string().min(1, "Opened date is required"),
+});
+
+export const fuelLogSchema = z.object({
+  vehicle_id: z.string().uuid("Select a vehicle"),
+  trip_id: z.string().uuid().optional().nullable(),
+  liters: z.coerce.number().positive("Liters must be positive"),
+  cost: z.coerce.number().min(0),
+  odometer: z.coerce.number().int().min(0),
+  date: z.string().min(1, "Date is required"),
+});
+
+export const expenseSchema = z.object({
+  vehicle_id: z.string().uuid("Select a vehicle"),
+  trip_id: z.string().uuid().optional().nullable(),
+  category: z.string().min(2, "Category is required"),
+  amount: z.coerce.number().positive("Amount must be positive"),
+  description: z.string().min(3, "Description is required"),
+  date: z.string().min(1, "Date is required"),
+});
+
+export const vehicleDocumentSchema = z.object({
+  vehicle_id: z.string().uuid("Select a vehicle"),
+  document_type: z.string().min(2, "Document type is required"),
+  file_name: z.string().min(2, "File name is required"),
+  storage_path: z.string().optional().nullable(),
+  expiry_date: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+});
+
 export type VehicleInput = z.infer<typeof vehicleSchema>;
 export type DriverInput = z.infer<typeof driverSchema>;
 export type TripInput = z.infer<typeof tripSchema>;
+export type MaintenanceInput = z.infer<typeof maintenanceSchema>;
+export type FuelLogInput = z.infer<typeof fuelLogSchema>;
+export type ExpenseInput = z.infer<typeof expenseSchema>;
+export type VehicleDocumentInput = z.infer<typeof vehicleDocumentSchema>;

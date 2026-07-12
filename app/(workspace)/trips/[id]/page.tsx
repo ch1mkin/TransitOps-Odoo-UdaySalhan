@@ -1,5 +1,7 @@
 import { TripDetailModule } from "@/features/trips/components/trip-detail-module";
-import { getTripById } from "@/lib/fleet/queries";
+import { canManageTripLifecycle } from "@/lib/fleet/permissions";
+import { getTripById, getTripUpdates } from "@/lib/fleet/queries";
+import { getSessionProfile } from "@/lib/fleet/session";
 
 export default async function TripDetailPage({
   params,
@@ -7,7 +9,18 @@ export default async function TripDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const result = await getTripById(id);
+  const [result, session, updatesResult] = await Promise.all([
+    getTripById(id),
+    getSessionProfile(),
+    getTripUpdates(id),
+  ]);
 
-  return <TripDetailModule id={id} initialData={result.data} />;
+  return (
+    <TripDetailModule
+      id={id}
+      initialData={result.data}
+      initialUpdates={updatesResult.data ?? []}
+      canManageLifecycle={session.role ? canManageTripLifecycle(session.role) : false}
+    />
+  );
 }

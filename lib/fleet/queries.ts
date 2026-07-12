@@ -1,6 +1,26 @@
 import { createClient } from "@/lib/supabase/server";
-import { mapDriver, mapTrip, mapVehicle } from "@/lib/fleet/mappers";
-import type { Driver, Trip, Vehicle } from "@/types/entities";
+import {
+  mapDriver,
+  mapExpense,
+  mapFuelLog,
+  mapMaintenance,
+  mapNotification,
+  mapTrip,
+  mapTripUpdate,
+  mapVehicle,
+  mapVehicleDocument,
+} from "@/lib/fleet/mappers";
+import type {
+  AppNotification,
+  Driver,
+  ExpenseLog,
+  FuelLog,
+  MaintenanceLog,
+  Trip,
+  TripUpdate,
+  Vehicle,
+  VehicleDocument,
+} from "@/types/entities";
 
 export type FleetQueryResult<T> =
   | { data: T; error: null }
@@ -142,4 +162,77 @@ export async function getFleetLabels(): Promise<
   );
 
   return { data: { vehicles, drivers }, error: null };
+}
+
+export async function getMaintenanceLogs(): Promise<FleetQueryResult<MaintenanceLog[]>> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from("maintenance_logs")
+    .select("*")
+    .order("opened_at", { ascending: false });
+
+  if (error) return { data: null, error: error.message };
+  return { data: (data ?? []).map(mapMaintenance), error: null };
+}
+
+export async function getFuelLogs(): Promise<FleetQueryResult<FuelLog[]>> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from("fuel_logs")
+    .select("*")
+    .order("date", { ascending: false });
+
+  if (error) return { data: null, error: error.message };
+  return { data: (data ?? []).map(mapFuelLog), error: null };
+}
+
+export async function getExpenses(): Promise<FleetQueryResult<ExpenseLog[]>> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from("expenses")
+    .select("*")
+    .order("date", { ascending: false });
+
+  if (error) return { data: null, error: error.message };
+  return { data: (data ?? []).map(mapExpense), error: null };
+}
+
+export async function getVehicleDocuments(): Promise<FleetQueryResult<VehicleDocument[]>> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from("vehicle_documents")
+    .select("*")
+    .order("expiry_date", { ascending: true, nullsFirst: false });
+
+  if (error) return { data: null, error: error.message };
+  return { data: (data ?? []).map(mapVehicleDocument), error: null };
+}
+
+export async function getTripUpdates(
+  tripId: string
+): Promise<FleetQueryResult<TripUpdate[]>> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from("trip_updates")
+    .select("*, profiles(full_name)")
+    .eq("trip_id", tripId)
+    .order("created_at", { ascending: false });
+
+  if (error) return { data: null, error: error.message };
+  return { data: (data ?? []).map(mapTripUpdate), error: null };
+}
+
+export async function getNotifications(
+  userId: string
+): Promise<FleetQueryResult<AppNotification[]>> {
+  const supabase = await getSupabase();
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  if (error) return { data: null, error: error.message };
+  return { data: (data ?? []).map(mapNotification), error: null };
 }

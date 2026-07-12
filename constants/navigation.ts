@@ -1,11 +1,17 @@
 import {
   BarChart3,
   Car,
+  ClipboardList,
+  FileText,
   Fuel,
+  History,
   LayoutDashboard,
+  LineChart,
+  PlusCircle,
   Receipt,
   Route,
   Settings,
+  ShieldAlert,
   UserCircle,
   Users,
   Wrench,
@@ -18,61 +24,23 @@ export interface NavItem {
   href: string;
   icon: LucideIcon;
   roles: Role[];
-  children?: NavItem[];
 }
+
+const ALL_ROLES = Object.values(ROLES);
 
 export const NAV_ITEMS: NavItem[] = [
   {
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    roles: [
-      ROLES.FLEET_MANAGER,
-      ROLES.DISPATCHER,
-      ROLES.SAFETY_OFFICER,
-      ROLES.FINANCIAL_ANALYST,
-    ],
+    roles: ALL_ROLES,
   },
+  // Fleet Manager
   {
-    title: "Fleet",
+    title: "Vehicle Registry",
     href: "/vehicles",
     icon: Car,
-    roles: [
-      ROLES.FLEET_MANAGER,
-      ROLES.DISPATCHER,
-      ROLES.SAFETY_OFFICER,
-      ROLES.FINANCIAL_ANALYST,
-    ],
-    children: [
-      {
-        title: "Vehicles",
-        href: "/vehicles",
-        icon: Car,
-        roles: [
-          ROLES.FLEET_MANAGER,
-          ROLES.DISPATCHER,
-          ROLES.SAFETY_OFFICER,
-          ROLES.FINANCIAL_ANALYST,
-        ],
-      },
-    ],
-  },
-  {
-    title: "Drivers",
-    href: "/drivers",
-    icon: Users,
-    roles: [
-      ROLES.FLEET_MANAGER,
-      ROLES.DISPATCHER,
-      ROLES.SAFETY_OFFICER,
-      ROLES.FINANCIAL_ANALYST,
-    ],
-  },
-  {
-    title: "Trips",
-    href: "/trips",
-    icon: Route,
-    roles: [ROLES.FLEET_MANAGER, ROLES.DISPATCHER, ROLES.SAFETY_OFFICER],
+    roles: [ROLES.FLEET_MANAGER],
   },
   {
     title: "Maintenance",
@@ -81,37 +49,85 @@ export const NAV_ITEMS: NavItem[] = [
     roles: [ROLES.FLEET_MANAGER],
   },
   {
+    title: "Vehicle Documents",
+    href: "/vehicle-documents",
+    icon: FileText,
+    roles: [ROLES.FLEET_MANAGER],
+  },
+  {
+    title: "Fleet Analytics",
+    href: "/reports",
+    icon: BarChart3,
+    roles: [ROLES.FLEET_MANAGER],
+  },
+  // Dispatcher
+  {
+    title: "Create Trip",
+    href: "/trips",
+    icon: PlusCircle,
+    roles: [ROLES.DISPATCHER],
+  },
+  {
+    title: "Active Trips",
+    href: "/trips/active",
+    icon: Route,
+    roles: [ROLES.DISPATCHER],
+  },
+  {
+    title: "Trip History",
+    href: "/trips/history",
+    icon: History,
+    roles: [ROLES.DISPATCHER],
+  },
+  // Safety Officer
+  {
+    title: "Driver Management",
+    href: "/drivers",
+    icon: Users,
+    roles: [ROLES.SAFETY_OFFICER],
+  },
+  {
+    title: "License Monitoring",
+    href: "/license-monitoring",
+    icon: ClipboardList,
+    roles: [ROLES.SAFETY_OFFICER],
+  },
+  {
+    title: "Safety Reports",
+    href: "/reports",
+    icon: ShieldAlert,
+    roles: [ROLES.SAFETY_OFFICER],
+  },
+  // Financial Analyst
+  {
     title: "Fuel Logs",
     href: "/fuel",
     icon: Fuel,
-    roles: [ROLES.FLEET_MANAGER, ROLES.FINANCIAL_ANALYST],
+    roles: [ROLES.FINANCIAL_ANALYST],
   },
   {
     title: "Expenses",
     href: "/expenses",
     icon: Receipt,
-    roles: [ROLES.FLEET_MANAGER, ROLES.FINANCIAL_ANALYST],
+    roles: [ROLES.FINANCIAL_ANALYST],
   },
   {
-    title: "Reports",
+    title: "Financial Reports",
     href: "/reports",
     icon: BarChart3,
-    roles: [
-      ROLES.FLEET_MANAGER,
-      ROLES.FINANCIAL_ANALYST,
-      ROLES.SAFETY_OFFICER,
-    ],
+    roles: [ROLES.FINANCIAL_ANALYST],
+  },
+  {
+    title: "ROI Analytics",
+    href: "/reports/roi",
+    icon: LineChart,
+    roles: [ROLES.FINANCIAL_ANALYST],
   },
   {
     title: "Settings",
     href: "/settings",
     icon: Settings,
-    roles: [
-      ROLES.FLEET_MANAGER,
-      ROLES.DISPATCHER,
-      ROLES.SAFETY_OFFICER,
-      ROLES.FINANCIAL_ANALYST,
-    ],
+    roles: ALL_ROLES,
   },
 ];
 
@@ -119,12 +135,7 @@ export const PROFILE_NAV: NavItem = {
   title: "Profile",
   href: "/profile",
   icon: UserCircle,
-  roles: [
-    ROLES.FLEET_MANAGER,
-    ROLES.DISPATCHER,
-    ROLES.SAFETY_OFFICER,
-    ROLES.FINANCIAL_ANALYST,
-  ],
+  roles: ALL_ROLES,
 };
 
 export function getNavForRole(role: Role): NavItem[] {
