@@ -6,13 +6,18 @@ export type ThemeMode = "light" | "dark" | "system";
 interface ThemeState {
   mode: ThemeMode;
   setMode: (mode: ThemeMode) => void;
+  toggleTheme: () => void;
 }
 
 export const useThemeStore = create<ThemeState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       mode: "light",
       setMode: (mode) => set({ mode }),
+      toggleTheme: () => {
+        const resolved = resolveTheme(get().mode);
+        set({ mode: resolved === "dark" ? "light" : "dark" });
+      },
     }),
     { name: "transitops-theme" }
   )
