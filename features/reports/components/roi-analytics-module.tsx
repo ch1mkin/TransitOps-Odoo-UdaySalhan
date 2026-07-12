@@ -11,7 +11,8 @@ import {
   YAxis,
 } from "recharts";
 import { ChartCard } from "@/components/charts/chart-card";
-import { CHART_AXIS, CHART_COLORS, CHART_GRID, formatCurrency } from "@/components/charts/chart-theme";
+import { formatCurrency } from "@/components/charts/chart-theme";
+import { useChartTheme } from "@/components/charts/use-chart-theme";
 import { ChartTooltip } from "@/components/charts/chart-tooltip";
 import { ExportButton } from "@/components/data/export-button";
 import { ModulePage } from "@/components/data/module-page";
@@ -39,6 +40,7 @@ export function RoiAnalyticsModule({
   fuelLogs,
   expenses,
 }: RoiAnalyticsModuleProps) {
+  const chart = useChartTheme();
   const amortizationPercent = useSettingsStore(
     (s) => s.byRole[ROLES.FINANCIAL_ANALYST].roiAmortizationPercent
   );
@@ -147,11 +149,11 @@ export function RoiAnalyticsModule({
         empty={chartData.length === 0}
         footer="Based on completed trip revenue, fuel, expenses, and amortized acquisition cost"
       >
-        <ResponsiveContainer width="100%" height={260}>
+        <ResponsiveContainer key={chart.id} width="100%" height={260}>
           <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid {...CHART_GRID} />
-            <XAxis dataKey="name" {...CHART_AXIS} />
-            <YAxis {...CHART_AXIS} width={40} tickFormatter={(v) => `${v}%`} />
+            <CartesianGrid {...chart.grid} />
+            <XAxis dataKey="name" {...chart.axis} />
+            <YAxis {...chart.axis} width={40} tickFormatter={(v) => `${v}%`} />
             <Tooltip
               cursor={false}
               content={
@@ -165,7 +167,7 @@ export function RoiAnalyticsModule({
             <Bar
               dataKey="roi"
               name="ROI %"
-              fill={CHART_COLORS.accent}
+              fill={chart.colors.accent}
               radius={[6, 6, 0, 0]}
             />
           </BarChart>

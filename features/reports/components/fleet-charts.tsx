@@ -20,14 +20,13 @@ import {
 } from "recharts";
 import { ChartCard } from "@/components/charts/chart-card";
 import {
-  CHART_AXIS,
-  CHART_COLORS,
-  CHART_GRID,
+  buildStatusColors,
   formatCompactDate,
   formatCurrency,
   formatCompactCurrency,
   formatNumber,
 } from "@/components/charts/chart-theme";
+import { useChartTheme } from "@/components/charts/use-chart-theme";
 import { ChartTooltip } from "@/components/charts/chart-tooltip";
 import { isLicenseExpired } from "@/lib/fleet/trip-lifecycle";
 import {
@@ -48,18 +47,6 @@ interface FleetChartsProps {
   maintenanceLogs?: MaintenanceLog[];
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  Available: CHART_COLORS.success,
-  "On Trip": CHART_COLORS.accent,
-  "In Shop": CHART_COLORS.warning,
-  Retired: CHART_COLORS.muted,
-  Suspended: CHART_COLORS.danger,
-  Draft: CHART_COLORS.muted,
-  Dispatched: CHART_COLORS.accent,
-  Completed: CHART_COLORS.success,
-  Cancelled: CHART_COLORS.danger,
-};
-
 export function FleetCharts({
   variant = "all",
   vehicles,
@@ -69,6 +56,9 @@ export function FleetCharts({
   expenses,
   maintenanceLogs = [],
 }: FleetChartsProps) {
+  const chart = useChartTheme();
+  const statusColors = buildStatusColors(chart.colors);
+
   const showFleet = variant === "fleet" || variant === "all";
   const showSafety = variant === "safety" || variant === "all";
   const showFinancial = variant === "financial" || variant === "all";
@@ -223,7 +213,7 @@ export function FleetCharts({
   );
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div key={chart.id} className="grid gap-4 lg:grid-cols-2">
       {showFleet ? (
         <>
           <ChartCard
@@ -264,7 +254,7 @@ export function FleetCharts({
                   {vehicleStatus.map((entry) => (
                     <Cell
                       key={entry.name}
-                      fill={STATUS_COLORS[entry.name] ?? CHART_COLORS.muted}
+                      fill={statusColors[entry.name] ?? chart.colors.muted}
                     />
                   ))}
                 </Pie>
@@ -272,7 +262,7 @@ export function FleetCharts({
                 <Legend
                   verticalAlign="bottom"
                   iconType="circle"
-                  wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+                  wrapperStyle={{ fontSize: 12, paddingTop: 8, color: chart.legend }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -286,15 +276,15 @@ export function FleetCharts({
           >
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={tripsByStatus} barGap={4}>
-                <CartesianGrid {...CHART_GRID} />
-                <XAxis dataKey="name" {...CHART_AXIS} />
-                <YAxis allowDecimals={false} {...CHART_AXIS} width={32} />
+                <CartesianGrid {...chart.grid} />
+                <XAxis dataKey="name" {...chart.axis} />
+                <YAxis allowDecimals={false} {...chart.axis} width={32} />
                 <Tooltip cursor={false} content={<ChartTooltip />} />
                 <Bar dataKey="value" name="Trips" radius={[6, 6, 0, 0]}>
                   {tripsByStatus.map((entry) => (
                     <Cell
                       key={entry.name}
-                      fill={STATUS_COLORS[entry.name] ?? CHART_COLORS.accent}
+                      fill={statusColors[entry.name] ?? chart.colors.accent}
                     />
                   ))}
                 </Bar>
@@ -311,19 +301,19 @@ export function FleetCharts({
               <AreaChart data={maintenanceTrend}>
                 <defs>
                   <linearGradient id="maintFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={CHART_COLORS.warning} stopOpacity={0.25} />
-                    <stop offset="100%" stopColor={CHART_COLORS.warning} stopOpacity={0.02} />
+                    <stop offset="0%" stopColor={chart.colors.warning} stopOpacity={0.25} />
+                    <stop offset="100%" stopColor={chart.colors.warning} stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid {...CHART_GRID} />
-                <XAxis dataKey="month" {...CHART_AXIS} />
-                <YAxis {...CHART_AXIS} width={48} tickFormatter={formatCompactCurrency} />
+                <CartesianGrid {...chart.grid} />
+                <XAxis dataKey="month" {...chart.axis} />
+                <YAxis {...chart.axis} width={48} tickFormatter={formatCompactCurrency} />
                 <Tooltip cursor={false} content={<ChartTooltip valueFormatter={(v) => formatCurrency(v)} />} />
                 <Area
                   type="monotone"
                   dataKey="cost"
                   name="Cost"
-                  stroke={CHART_COLORS.warning}
+                  stroke={chart.colors.warning}
                   fill="url(#maintFill)"
                   strokeWidth={2}
                 />
@@ -363,9 +353,12 @@ export function FleetCharts({
                             style={{
                               backgroundColor:
                                 cell.count === 0
-                                  ? "#F3F4F6"
+                                  ? chart.heatmap.empty
                                   : `rgba(245, 158, 11, ${0.15 + cell.count * 0.2})`,
-                              color: cell.count > 2 ? "#92400E" : "#6B7280",
+                              color:
+                                cell.count > 2
+                                  ? chart.heatmap.textHigh
+                                  : chart.heatmap.textLow,
                             }}
                           >
                             {cell.count || "·"}
@@ -392,9 +385,9 @@ export function FleetCharts({
             {fuelEfficiencyTrend.length > 0 ? (
               <ResponsiveContainer width="100%" height={180}>
                 <LineChart data={fuelEfficiencyTrend}>
-                  <CartesianGrid {...CHART_GRID} />
-                  <XAxis dataKey="date" {...CHART_AXIS} />
-                  <YAxis {...CHART_AXIS} width={40} />
+                  <CartesianGrid {...chart.grid} />
+                  <XAxis dataKey="date" {...chart.axis} />
+                  <YAxis {...chart.axis} width={40} />
                   <Tooltip
                     cursor={false}
                     content={
@@ -405,7 +398,7 @@ export function FleetCharts({
                     type="monotone"
                     dataKey="kmPerLiter"
                     name="Efficiency"
-                    stroke={CHART_COLORS.success}
+                    stroke={chart.colors.success}
                     strokeWidth={2}
                     dot={false}
                   />
@@ -439,10 +432,10 @@ export function FleetCharts({
                       key={entry.name}
                       fill={
                         entry.name === "Expired"
-                          ? CHART_COLORS.danger
+                          ? chart.colors.danger
                           : entry.name === "Expiring"
-                            ? CHART_COLORS.warning
-                            : CHART_COLORS.success
+                            ? chart.colors.warning
+                            : chart.colors.success
                       }
                     />
                   ))}
@@ -451,7 +444,7 @@ export function FleetCharts({
                 <Legend
                   verticalAlign="bottom"
                   iconType="circle"
-                  wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+                  wrapperStyle={{ fontSize: 12, paddingTop: 8, color: chart.legend }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -464,11 +457,11 @@ export function FleetCharts({
           >
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={safetyScores} layout="vertical" margin={{ left: 8 }}>
-                <CartesianGrid {...CHART_GRID} horizontal={false} />
-                <XAxis type="number" domain={[0, 100]} {...CHART_AXIS} />
-                <YAxis type="category" dataKey="name" {...CHART_AXIS} width={56} />
+                <CartesianGrid {...chart.grid} horizontal={false} />
+                <XAxis type="number" domain={[0, 100]} {...chart.axis} />
+                <YAxis type="category" dataKey="name" {...chart.axis} width={56} />
                 <Tooltip cursor={false} content={<ChartTooltip />} />
-                <Bar dataKey="score" name="Score" fill={CHART_COLORS.primary} radius={[0, 4, 4, 0]} />
+                <Bar dataKey="score" name="Score" fill={chart.colors.primary} radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -480,20 +473,20 @@ export function FleetCharts({
           >
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={topDrivers}>
-                <CartesianGrid {...CHART_GRID} />
-                <XAxis dataKey="name" {...CHART_AXIS} />
-                <YAxis allowDecimals={false} {...CHART_AXIS} width={32} />
+                <CartesianGrid {...chart.grid} />
+                <XAxis dataKey="name" {...chart.axis} />
+                <YAxis allowDecimals={false} {...chart.axis} width={32} />
                 <Tooltip cursor={false} content={<ChartTooltip />} />
                 <Bar
                   dataKey="completedTrips"
                   name="Completed trips"
-                  fill={CHART_COLORS.accent}
+                  fill={chart.colors.accent}
                   radius={[6, 6, 0, 0]}
                 />
                 <Bar
                   dataKey="safetyScore"
                   name="Safety score"
-                  fill={CHART_COLORS.success}
+                  fill={chart.colors.success}
                   radius={[6, 6, 0, 0]}
                 />
               </BarChart>
@@ -511,9 +504,9 @@ export function FleetCharts({
           >
             <ResponsiveContainer width="100%" height={240}>
               <LineChart data={fuelTrend}>
-                <CartesianGrid {...CHART_GRID} />
-                <XAxis dataKey="date" {...CHART_AXIS} />
-                <YAxis {...CHART_AXIS} width={40} />
+                <CartesianGrid {...chart.grid} />
+                <XAxis dataKey="date" {...chart.axis} />
+                <YAxis {...chart.axis} width={40} />
                 <Tooltip
                   cursor={false}
                   content={
@@ -528,9 +521,9 @@ export function FleetCharts({
                   type="monotone"
                   dataKey="liters"
                   name="Liters"
-                  stroke={CHART_COLORS.success}
+                  stroke={chart.colors.success}
                   strokeWidth={2.5}
-                  dot={{ r: 3, fill: CHART_COLORS.success, strokeWidth: 0 }}
+                  dot={{ r: 3, fill: chart.colors.success, strokeWidth: 0 }}
                   activeDot={{ r: 5 }}
                 />
               </LineChart>
@@ -546,13 +539,13 @@ export function FleetCharts({
               <AreaChart data={expenseTrend}>
                 <defs>
                   <linearGradient id="expenseFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={CHART_COLORS.danger} stopOpacity={0.25} />
-                    <stop offset="100%" stopColor={CHART_COLORS.danger} stopOpacity={0.02} />
+                    <stop offset="0%" stopColor={chart.colors.danger} stopOpacity={0.25} />
+                    <stop offset="100%" stopColor={chart.colors.danger} stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid {...CHART_GRID} />
-                <XAxis dataKey="date" {...CHART_AXIS} />
-                <YAxis {...CHART_AXIS} width={48} tickFormatter={formatCompactCurrency} />
+                <CartesianGrid {...chart.grid} />
+                <XAxis dataKey="date" {...chart.axis} />
+                <YAxis {...chart.axis} width={48} tickFormatter={formatCompactCurrency} />
                 <Tooltip
                   cursor={false}
                   content={
@@ -563,7 +556,7 @@ export function FleetCharts({
                   type="monotone"
                   dataKey="amount"
                   name="Amount"
-                  stroke={CHART_COLORS.danger}
+                  stroke={chart.colors.danger}
                   fill="url(#expenseFill)"
                   strokeWidth={2}
                 />
@@ -579,10 +572,10 @@ export function FleetCharts({
           >
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={expenseByCategory}>
-                <CartesianGrid {...CHART_GRID} />
-                <XAxis dataKey="name" {...CHART_AXIS} />
+                <CartesianGrid {...chart.grid} />
+                <XAxis dataKey="name" {...chart.axis} />
                 <YAxis
-                  {...CHART_AXIS}
+                  {...chart.axis}
                   width={52}
                   tickFormatter={formatCompactCurrency}
                 />
@@ -592,7 +585,7 @@ export function FleetCharts({
                     <ChartTooltip valueFormatter={(v) => formatCurrency(v)} />
                   }
                 />
-                <Bar dataKey="value" name="Spend" fill={CHART_COLORS.accent} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="value" name="Spend" fill={chart.colors.accent} radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>
