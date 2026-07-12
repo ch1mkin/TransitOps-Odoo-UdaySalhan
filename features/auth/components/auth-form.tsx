@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROLE_OPTIONS } from "@/constants/roles";
 import { WALKTHROUGH_PENDING_KEY } from "@/constants/walkthrough";
+import { cn } from "@/lib/utils";
 import { MinimalConfetti } from "@/features/auth/components/minimal-confetti";
 import { OtpInput } from "@/features/auth/components/otp-input";
 import {
@@ -293,10 +294,22 @@ export function AuthForm() {
     <>
       <MinimalConfetti active={showConfetti} />
 
-      <div className="flex min-h-screen items-center justify-center bg-background/70 p-4">
-        <Card className="relative w-full max-w-md overflow-hidden border-border/80 bg-card/90 backdrop-blur-md">
+      <div className="auth-page-shell relative flex min-h-screen items-center justify-center overflow-hidden p-4">
+        <div
+          className={cn(
+            "auth-page-glow pointer-events-none absolute inset-0",
+            isLogin ? "auth-page-glow-login" : "auth-page-glow-register"
+          )}
+        />
+
+        <Card
+          className={cn(
+            "auth-premium-card relative w-full max-w-md overflow-hidden border-border/70 bg-card/82 backdrop-blur-xl",
+            isLogin ? "auth-premium-card-login" : "auth-premium-card-register"
+          )}
+        >
           {loading ? (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/85 backdrop-blur-[1px]">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/80 backdrop-blur-sm">
               <TruckLoader
                 size="sm"
                 label={otpSent ? "Signing you in…" : isLogin ? "Signing in…" : "Creating account…"}
@@ -304,7 +317,14 @@ export function AuthForm() {
             </div>
           ) : null}
 
-          <CardHeader className="space-y-3 text-center">
+          <div
+            className={cn(
+              "auth-card-accent h-1.5 w-full",
+              isLogin ? "auth-card-accent-login" : "auth-card-accent-register"
+            )}
+          />
+
+          <CardHeader className="space-y-3 pt-8 text-center">
             <div className="mx-auto flex size-14 items-center justify-center">
               <BrandLogo variant="icon" size={56} priority />
             </div>
