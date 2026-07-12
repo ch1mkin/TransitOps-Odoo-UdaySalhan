@@ -25,6 +25,9 @@ export function assertVehicleDispatchable(vehicle: Vehicle) {
 }
 
 export function assertDriverAssignable(driver: Driver) {
+  if (driver.status === "Pending Approval") {
+    throw new TripValidationError("Driver profile is pending approval.");
+  }
   if (driver.status === "Suspended") {
     throw new TripValidationError("Suspended drivers cannot be assigned.");
   }

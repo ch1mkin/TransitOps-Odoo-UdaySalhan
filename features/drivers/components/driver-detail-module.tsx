@@ -10,6 +10,7 @@ import { InlineStatusSelect } from "@/components/data/inline-status-select";
 import { StatusBadge } from "@/components/data/status-badge";
 import { Button } from "@/components/ui/button";
 import { TruckLoaderSection } from "@/components/ui/truck-loader";
+import { DriverApprovalPanel } from "@/features/drivers/components/driver-approval-panel";
 import { DriverFormDialog } from "@/features/drivers/components/driver-form-dialog";
 import { DriverDocumentsPanel } from "@/components/drivers/driver-documents-panel";
 import { updateDriverStatus } from "@/lib/fleet/actions";
@@ -77,7 +78,7 @@ export function DriverDetailModule({
           { label: "Safety Score", value: `${driver.safety_score}%` },
           {
             label: "Status",
-            value: canChangeStatus ? (
+            value: canChangeStatus && driver.status !== "Pending Approval" ? (
               <InlineStatusSelect
                 value={driver.status}
                 options={MANUAL_DRIVER_STATUSES}
@@ -105,6 +106,12 @@ export function DriverDetailModule({
           },
         ]}
       />
+
+      {canManage && driver.status === "Pending Approval" ? (
+        <div className="mt-4">
+          <DriverApprovalPanel driverId={driver.id} driverName={driver.name} />
+        </div>
+      ) : null}
 
       <DriverDocumentsPanel documents={initialDocuments} />
 

@@ -20,7 +20,22 @@ export const driverSchema = z.object({
   phone: z.string().min(8, "Phone is required"),
   email: z.string().email("Valid email is required"),
   safety_score: z.coerce.number().int().min(0).max(100),
-  status: z.enum(["Available", "On Trip", "Off Duty", "Suspended"]),
+  status: z.enum([
+    "Pending Approval",
+    "Available",
+    "On Trip",
+    "Off Duty",
+    "Suspended",
+  ]),
+});
+
+export const driverSelfRegistrationSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  license_number: z.string().min(3, "License number is required"),
+  license_category: z.enum(["HMV", "LMV"]),
+  license_expiry: z.string().min(1, "Expiry date is required"),
+  phone: z.string().min(8, "Phone is required"),
+  email: z.string().email("Valid email is required"),
 });
 
 export const tripSchema = z.object({
@@ -80,6 +95,7 @@ export const completeTripSchema = z.object({
 export type CompleteTripInput = z.infer<typeof completeTripSchema>;
 export type VehicleInput = z.infer<typeof vehicleSchema>;
 export type DriverInput = z.infer<typeof driverSchema>;
+export type DriverSelfRegistrationInput = z.infer<typeof driverSelfRegistrationSchema>;
 export type TripInput = z.infer<typeof tripSchema>;
 export type MaintenanceInput = z.infer<typeof maintenanceSchema>;
 export type FuelLogInput = z.infer<typeof fuelLogSchema>;

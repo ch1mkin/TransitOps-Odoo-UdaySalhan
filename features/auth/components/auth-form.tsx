@@ -388,7 +388,7 @@ export function AuthForm() {
                   <Label htmlFor="fullName">Full Name</Label>
                   <Input
                     id="fullName"
-                    placeholder="Rajesh Kumar"
+                    placeholder="Your full name"
                     {...registerForm.register("fullName")}
                   />
                   {registerForm.formState.errors.fullName ? (
@@ -406,7 +406,7 @@ export function AuthForm() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="rajesh.kumar@transitops.in"
+                      placeholder="you@company.com"
                       {...(isLogin
                         ? loginForm.register("email")
                         : registerForm.register("email"))}

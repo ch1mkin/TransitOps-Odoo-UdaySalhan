@@ -1,5 +1,10 @@
 export type VehicleStatus = "Available" | "On Trip" | "In Shop" | "Retired";
-export type DriverStatus = "Available" | "On Trip" | "Off Duty" | "Suspended";
+export type DriverStatus =
+  | "Pending Approval"
+  | "Available"
+  | "On Trip"
+  | "Off Duty"
+  | "Suspended";
 export type TripStatus = "Draft" | "Dispatched" | "Completed" | "Cancelled";
 
 export interface Vehicle {
@@ -106,6 +111,18 @@ export interface DriverUploadSession {
   file_name?: string | null;
   mime_type?: string | null;
   expires_at: string;
+}
+
+export interface DriverRegistrationInvite {
+  id: string;
+  token: string;
+  status: "waiting" | "submitted" | "approved" | "rejected" | "expired";
+  driver_id?: string | null;
+  expires_at: string;
+  submitted_at?: string | null;
+  reviewed_at?: string | null;
+  rejection_reason?: string | null;
+  created_at: string;
 }
 
 export interface VehicleUploadSession {

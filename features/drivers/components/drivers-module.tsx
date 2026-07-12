@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, UserPlus } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/data/data-table";
 import { ModuleFilters } from "@/components/data/module-filters";
 import { ModulePage } from "@/components/data/module-page";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { InlineStatusSelect } from "@/components/data/inline-status-select";
 import { ExportButton } from "@/components/data/export-button";
 import { DriverFormDialog } from "@/features/drivers/components/driver-form-dialog";
+import { DriverInviteDialog } from "@/features/drivers/components/driver-invite-dialog";
 import { updateDriverStatus } from "@/lib/fleet/actions";
 import { MANUAL_DRIVER_STATUSES } from "@/lib/fleet/status-rules";
 import { useSettingsStore } from "@/store/settings-store";
@@ -21,6 +22,7 @@ import type { Driver, DriverStatus } from "@/types/entities";
 
 const STATUS_OPTIONS = [
   { label: "All statuses", value: "all" },
+  { label: "Pending Approval", value: "Pending Approval" },
   { label: "Available", value: "Available" },
   { label: "On Trip", value: "On Trip" },
   { label: "Off Duty", value: "Off Duty" },
@@ -45,6 +47,7 @@ export function DriversModule({
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [formOpen, setFormOpen] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
 
   const columns: DataTableColumn<Driver>[] = useMemo(
     () => [
@@ -81,7 +84,7 @@ export function DriversModule({
         header: "Status",
         sortValue: (row) => row.status,
         cell: (row) =>
-          canChangeStatus ? (
+          canChangeStatus && row.status !== "Pending Approval" ? (
             <InlineStatusSelect
               value={row.status}
               options={MANUAL_DRIVER_STATUSES}
@@ -154,10 +157,16 @@ export function DriversModule({
             ]}
           />
           {canCreate ? (
-            <Button size="sm" onClick={() => setFormOpen(true)}>
-              <Plus className="size-4" />
-              Add Driver
-            </Button>
+            <>
+              <Button size="sm" variant="outline" onClick={() => setInviteOpen(true)}>
+                <UserPlus className="size-4" />
+                Invite Driver
+              </Button>
+              <Button size="sm" onClick={() => setFormOpen(true)}>
+                <Plus className="size-4" />
+                Add Driver
+              </Button>
+            </>
           ) : null}
         </div>
       }
@@ -201,7 +210,10 @@ export function DriversModule({
       </ModulePage>
 
       {canCreate && (
-        <DriverFormDialog open={formOpen} onOpenChange={setFormOpen} />
+        <>
+          <DriverFormDialog open={formOpen} onOpenChange={setFormOpen} />
+          <DriverInviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
+        </>
       )}
     </>
   );

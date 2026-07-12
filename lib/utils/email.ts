@@ -152,3 +152,25 @@ export async function sendLicenseReminderEmail(input: {
     }),
   });
 }
+
+export async function sendDriverRegistrationThanksEmail(input: {
+  to: string;
+  name: string;
+}) {
+  return sendTransactionalEmail({
+    to: input.to,
+    subject: "Thank you for submitting your driver information",
+    html: buildTransitOpsEmailTemplate({
+      heading: "Submission received",
+      previewText: "Your driver information was submitted successfully.",
+      intro: `Hi <strong>${input.name}</strong>, thank you for submitting your driver information to TransitOps.`,
+      highlightHtml: `
+        <p style="margin:0;font-size:15px;line-height:1.7;color:#1e3a8a;">
+          Our safety team will review your details and documents. You will be contacted once your profile is approved.
+        </p>
+      `,
+      footerNote:
+        "If you did not submit this registration, please contact your fleet operator.",
+    }),
+  });
+}
