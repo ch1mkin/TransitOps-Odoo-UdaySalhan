@@ -1,6 +1,7 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { resolveTheme, useThemeStore } from "@/store/theme-store";
 import { cn } from "@/lib/utils";
 
 interface TruckLoaderProps {
@@ -10,9 +11,27 @@ interface TruckLoaderProps {
 }
 
 const sizeMap = {
-  sm: { shell: "w-40", road: "h-16", icon: "h-9 w-[4.75rem]", bar: "w-28" },
-  md: { shell: "w-48", road: "h-[4.5rem]", icon: "h-11 w-[5.75rem]", bar: "w-36" },
-  lg: { shell: "w-60", road: "h-24", icon: "h-14 w-[7.25rem]", bar: "w-44" },
+  sm: {
+    shell: "w-44",
+    stage: "h-20",
+    icon: "h-9 w-[4.75rem]",
+    bar: "w-28",
+    label: "text-xs",
+  },
+  md: {
+    shell: "w-52",
+    stage: "h-24",
+    icon: "h-11 w-[5.75rem]",
+    bar: "w-36",
+    label: "text-sm",
+  },
+  lg: {
+    shell: "w-64",
+    stage: "h-28",
+    icon: "h-14 w-[7.25rem]",
+    bar: "w-44",
+    label: "text-sm",
+  },
 };
 
 function subscribeReducedMotion(onChange: () => void) {
@@ -37,20 +56,45 @@ function usePrefersReducedMotion() {
   );
 }
 
+function useIsDarkTheme() {
+  const mode = useThemeStore((state) => state.mode);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(resolveTheme(mode) === "dark");
+
+    if (mode !== "system") return;
+
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = () => setIsDark(resolveTheme("system") === "dark");
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, [mode]);
+
+  return isDark;
+}
+
 function TruckWheel({
   cx,
   cy,
   r,
   spin,
+  isDark,
 }: {
   cx: number;
   cy: number;
   r: number;
   spin: boolean;
+  isDark: boolean;
 }) {
   return (
     <g transform={`translate(${cx} ${cy})`}>
-      <circle r={r} fill="#0f172a" stroke="#334155" strokeWidth="0.8" />
+      <circle
+        r={r}
+        fill={isDark ? "#1e293b" : "#0f172a"}
+        stroke={isDark ? "#64748b" : "#334155"}
+        strokeWidth="0.8"
+      />
       <g>
         {spin ? (
           <animateTransform
@@ -62,11 +106,16 @@ function TruckWheel({
             repeatCount="indefinite"
           />
         ) : null}
-        <circle r={r - 1.75} fill="none" stroke="#475569" strokeWidth="1" />
+        <circle
+          r={r - 1.75}
+          fill="none"
+          stroke={isDark ? "#94a3b8" : "#475569"}
+          strokeWidth="1"
+        />
         <circle
           r={r - 3.25}
           fill="none"
-          stroke="#94a3b8"
+          stroke={isDark ? "#cbd5e1" : "#94a3b8"}
           strokeWidth="1.1"
           strokeDasharray="2.8 2.2"
         />
@@ -75,7 +124,7 @@ function TruckWheel({
           y1={-(r - 3)}
           x2="0"
           y2={r - 3}
-          stroke="#e2e8f0"
+          stroke={isDark ? "#f8fafc" : "#e2e8f0"}
           strokeWidth="1.4"
           strokeLinecap="round"
         />
@@ -84,30 +133,12 @@ function TruckWheel({
           y1="0"
           x2={r - 3}
           y2="0"
-          stroke="#e2e8f0"
+          stroke={isDark ? "#f8fafc" : "#e2e8f0"}
           strokeWidth="1.4"
           strokeLinecap="round"
         />
-        <line
-          x1={-(r - 3.5) * 0.72}
-          y1={-(r - 3.5) * 0.72}
-          x2={(r - 3.5) * 0.72}
-          y2={(r - 3.5) * 0.72}
-          stroke="#cbd5e1"
-          strokeWidth="1.1"
-          strokeLinecap="round"
-        />
-        <line
-          x1={-(r - 3.5) * 0.72}
-          y1={(r - 3.5) * 0.72}
-          x2={(r - 3.5) * 0.72}
-          y2={-(r - 3.5) * 0.72}
-          stroke="#cbd5e1"
-          strokeWidth="1.1"
-          strokeLinecap="round"
-        />
-        <circle r={r * 0.3} fill="#f8fafc" />
-        <circle r={r * 0.13} fill="#64748b" />
+        <circle r={r * 0.3} fill={isDark ? "#e2e8f0" : "#f8fafc"} />
+        <circle r={r * 0.13} fill={isDark ? "#94a3b8" : "#64748b"} />
       </g>
     </g>
   );
@@ -116,48 +147,57 @@ function TruckWheel({
 function TruckIcon({
   className,
   spinWheels = true,
+  isDark = false,
 }: {
   className?: string;
   spinWheels?: boolean;
+  isDark?: boolean;
 }) {
   const reducedMotion = usePrefersReducedMotion();
   const spin = spinWheels && !reducedMotion;
+  const body = isDark ? "#60A5FA" : "#2563EB";
+  const cab = isDark ? "#38BDF8" : "#1D4ED8";
+  const teal = isDark ? "#2DD4BF" : "#14B8A6";
+  const amber = isDark ? "#FBBF24" : "#F59E0B";
+  const red = isDark ? "#F87171" : "#EF4444";
 
   return (
     <svg
       viewBox="0 0 104 46"
-      className={cn("text-[#0f2744]", className)}
+      className={className}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden
     >
-      <rect x="36" y="8" width="56" height="24" rx="2.5" fill="currentColor" />
-      <path d="M6 12h24l8 8v14H6V12z" fill="currentColor" />
-      <rect x="10" y="15" width="14" height="11" rx="1.25" fill="#14b8a6" fillOpacity="0.35" />
-      <rect x="40" y="12" width="46" height="2.5" rx="1" fill="#14b8a6" fillOpacity="0.55" />
-      <rect x="3" y="21" width="4" height="6" rx="0.75" fill="#14b8a6" />
-      <rect x="90" y="21" width="4.5" height="7" rx="0.75" fill="#ef4444" />
-      <rect x="32" y="17" width="2.5" height="15" fill="currentColor" fillOpacity="0.9" />
+      <rect x="36" y="8" width="56" height="24" rx="2.5" fill={body} />
+      <path d="M6 12h24l8 8v14H6V12z" fill={cab} />
+      <rect x="10" y="15" width="14" height="11" rx="1.25" fill={teal} fillOpacity="0.55" />
+      <rect x="40" y="12" width="46" height="2.5" rx="1" fill={teal} fillOpacity="0.85" />
+      <rect x="3" y="21" width="4" height="6" rx="0.75" fill={amber} />
+      <rect x="90" y="21" width="4.5" height="7" rx="0.75" fill={red} />
+      <rect x="32" y="17" width="2.5" height="15" fill={body} fillOpacity="0.95" />
       <path
         d="M14 28h10M8 28h4"
-        stroke="#14b8a6"
+        stroke={teal}
         strokeWidth="2.2"
         strokeLinecap="round"
       />
-      <TruckWheel cx={23} cy={35} r={7.5} spin={spin} />
-      <TruckWheel cx={72} cy={35} r={7.5} spin={spin} />
+      <TruckWheel cx={23} cy={35} r={7.5} spin={spin} isDark={isDark} />
+      <TruckWheel cx={72} cy={35} r={7.5} spin={spin} isDark={isDark} />
     </svg>
   );
 }
 
 /** Compact spinner for buttons and inline contexts */
 export function TruckLoaderInline({ className }: { className?: string }) {
+  const isDark = useIsDarkTheme();
+
   return (
     <span
       className={cn("inline-flex shrink-0 items-center justify-center", className)}
       aria-hidden
     >
-      <TruckIcon className="h-4 w-9" />
+      <TruckIcon className="h-4 w-9" isDark={isDark} />
     </span>
   );
 }
@@ -168,42 +208,44 @@ export function TruckLoader({
   size = "md",
 }: TruckLoaderProps) {
   const dim = sizeMap[size];
+  const isDark = useIsDarkTheme();
+  const roadColor = isDark ? "bg-cyan-400/80" : "bg-[#14b8a6]/80";
+  const barColor = isDark ? "bg-cyan-400" : "bg-[#14b8a6]";
 
   return (
     <div
-      className={cn("flex flex-col items-center justify-center gap-4 text-center", className)}
+      className={cn("flex items-center justify-center text-center", className)}
       role="status"
       aria-live="polite"
       aria-label={label}
     >
       <div
         className={cn(
-          "loader-shell relative overflow-hidden rounded-2xl border border-border bg-gradient-to-b from-card to-muted/30 shadow-sm",
-          dim.shell,
-          dim.road
+          "loader-shell relative overflow-hidden rounded-2xl border border-border bg-gradient-to-b from-card to-muted/30 px-4 pb-4 pt-3 shadow-sm",
+          dim.shell
         )}
       >
-        <div className="loader-road absolute inset-x-3 bottom-3 h-1 overflow-hidden rounded-full bg-muted">
-          <div className="loader-road-fill h-full rounded-full bg-[#14b8a6]/80" />
+        <div className={cn("relative w-full", dim.stage)}>
+          <div className="loader-road absolute inset-x-3 bottom-2 h-1 overflow-hidden rounded-full bg-muted">
+            <div className={cn("loader-road-fill h-full rounded-full", roadColor)} />
+          </div>
+
+          <div className="loader-dashes pointer-events-none absolute inset-x-0 bottom-4 flex gap-4 opacity-50">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <span key={i} className="h-0.5 w-5 shrink-0 rounded-full bg-border" />
+            ))}
+          </div>
+
+          <div className="loader-truck absolute bottom-2.5 left-1/2">
+            <TruckIcon className={dim.icon} isDark={isDark} />
+          </div>
         </div>
 
-        <div className="loader-dashes pointer-events-none absolute inset-x-0 bottom-5 flex gap-4 opacity-50">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <span key={i} className="h-0.5 w-5 shrink-0 rounded-full bg-border" />
-          ))}
-        </div>
-
-        <div className="loader-truck absolute bottom-3.5 left-1/2">
-          <TruckIcon className={dim.icon} />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <p className={cn("font-medium text-foreground", size === "sm" ? "text-xs" : "text-sm")}>
-          {label}
-        </p>
-        <div className={cn("mx-auto h-1 overflow-hidden rounded-full bg-muted", dim.bar)}>
-          <div className="loader-bar h-full rounded-full bg-[#14b8a6]" />
+        <div className="space-y-2">
+          <p className={cn("font-medium text-foreground", dim.label)}>{label}</p>
+          <div className={cn("mx-auto h-1 overflow-hidden rounded-full bg-muted", dim.bar)}>
+            <div className={cn("loader-bar h-full rounded-full", barColor)} />
+          </div>
         </div>
       </div>
     </div>
@@ -229,7 +271,7 @@ export function TruckLoaderSection({
 }
 
 export function TruckLoaderOverlay({
-  label = "Loading workspace",
+  label = "Loading…",
   className,
 }: TruckLoaderProps) {
   return (

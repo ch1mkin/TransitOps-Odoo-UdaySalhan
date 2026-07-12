@@ -6,7 +6,7 @@ import { requireSessionRole } from "@/lib/fleet/session";
 import { notifyUser } from "@/lib/fleet/trip-events";
 import { isLicenseExpired } from "@/lib/fleet/trip-lifecycle";
 import { DEFAULT_ROLE_SETTINGS } from "@/store/settings-store";
-import { sendTransactionalEmail } from "@/lib/utils/email";
+import { sendLicenseReminderEmail } from "@/lib/utils/email";
 import { createClient } from "@/lib/supabase/server";
 import type { Driver } from "@/types/entities";
 
@@ -110,10 +110,10 @@ export async function syncLicenseExpiryNotifications(options?: {
     }
 
     if (emailReminders && driver.email) {
-      const email = await sendTransactionalEmail({
+      const email = await sendLicenseReminderEmail({
         to: driver.email,
         subject: copy.emailSubject,
-        html: `<p>${copy.message}</p><p>Please renew the license and update records in TransitOps.</p>`,
+        message: copy.message,
       });
       if (email.sent) emailed += 1;
     }
