@@ -27,7 +27,7 @@ export default async function WorkspaceLayout({
   const userName = profile?.full_name ?? user.email ?? "User";
 
   return (
-    <WorkspaceChrome role={role} userName={userName}>
+    <WorkspaceChrome role={role} userName={userName} userId={user.id}>
       {children}
     </WorkspaceChrome>
   );

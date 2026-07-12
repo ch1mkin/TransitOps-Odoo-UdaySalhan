@@ -126,5 +126,8 @@ export function mapSupabaseAuthError(message: string): string {
   if (/invalid api key/i.test(message)) {
     return "Invalid Supabase API key. Open Supabase → Project Settings → API and paste the anon public JWT into NEXT_PUBLIC_SUPABASE_ANON_KEY in .env, then restart npm run dev.";
   }
+  if (/invalid login credentials/i.test(message)) {
+    return "Invalid email or password. Please check your credentials and try again.";
+  }
   return message;
 }

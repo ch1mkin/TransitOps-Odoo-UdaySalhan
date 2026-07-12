@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Loader2, Maximize2, Minus, X } from "lucide-react";
+import { Maximize2, Minus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PopoutContent } from "@/components/workspace/popout-content";
 import { useWorkspaceStore } from "@/store/workspace-store";
 import { cn } from "@/lib/utils";
 import type { PopoutWindow } from "@/types";
@@ -122,14 +123,8 @@ export function PopoutWindowFrame({ popout }: PopoutWindowFrameProps) {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-        <div className="flex size-14 items-center justify-center rounded-full border-2 border-accent/30">
-          <Loader2 className="size-6 animate-spin text-accent" />
-        </div>
-        <p className="text-sm text-muted-foreground">Loading {popout.title}…</p>
-        <p className="text-xs text-muted-foreground/70">
-          Double-click a tab to pop it out · Drag title bar to move
-        </p>
+      <div className="min-h-0 flex-1 overflow-y-auto bg-background p-3">
+        <PopoutContent href={popout.contentKey} compact />
       </div>
     </div>
   );

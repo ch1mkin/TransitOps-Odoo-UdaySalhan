@@ -1,25 +1,18 @@
 import { create } from "zustand";
+import { isWorkspaceTabPath } from "@/constants/sections";
 import { generateId } from "@/lib/utils";
 import type { ModulePanel, PopoutWindow, WorkspaceTab } from "@/types";
 
-const HOME_TAB: WorkspaceTab = {
-  id: "home",
-  title: "Home",
-  href: "/dashboard",
-  type: "home",
-  pinned: true,
-};
-
 interface WorkspaceState {
   tabs: WorkspaceTab[];
-  activeTabId: string;
+  activeTabId: string | null;
   sidebarCollapsed: boolean;
   sidebarOpen: boolean;
   modules: ModulePanel[];
   popouts: PopoutWindow[];
   maxZIndex: number;
 
-  setActiveTab: (tabId: string) => void;
+  setActiveTab: (tabId: string | null) => void;
   openTab: (tab: Omit<WorkspaceTab, "id" | "pinned"> & { id?: string }) => string;
   closeTab: (tabId: string) => void;
   reorderTabs: (activeId: string, overId: string) => void;
@@ -51,21 +44,21 @@ interface WorkspaceState {
 }
 
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
-  tabs: [HOME_TAB],
-  activeTabId: HOME_TAB.id,
+  tabs: [],
+  activeTabId: null,
   sidebarCollapsed: false,
   sidebarOpen: true,
   modules: [],
   popouts: [],
   maxZIndex: 100,
 
-  setActiveTab: (tabId) => {
-    const tab = get().tabs.find((t) => t.id === tabId);
-    if (!tab) return;
-    set({ activeTabId: tabId });
-  },
+  setActiveTab: (tabId) => set({ activeTabId: tabId }),
 
   openTab: (tabInput) => {
+    if (tabInput.type === "route" || tabInput.type === "home") {
+      return "";
+    }
+
     const existing = get().tabs.find(
       (t) =>
         t.href === tabInput.href ||
@@ -97,7 +90,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   closeTab: (tabId) => {
     const { tabs, activeTabId, popouts } = get();
     const tab = tabs.find((t) => t.id === tabId);
-    if (!tab || tab.pinned) return;
+    if (!tab) return;
 
     const newTabs = tabs.filter((t) => t.id !== tabId);
     const newPopouts = popouts.filter((p) => p.tabId !== tabId);
@@ -105,8 +98,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     let newActiveId = activeTabId;
     if (activeTabId === tabId) {
       const closedIndex = tabs.findIndex((t) => t.id === tabId);
-      const fallback = newTabs[Math.max(0, closedIndex - 1)] ?? HOME_TAB;
-      newActiveId = fallback.id;
+      newActiveId = newTabs[Math.max(0, closedIndex - 1)]?.id ?? null;
     }
 
     set({
@@ -122,7 +114,6 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     const overIndex = tabs.findIndex((t) => t.id === overId);
 
     if (activeIndex < 0 || overIndex < 0) return;
-    if (tabs[activeIndex].pinned || tabs[overIndex].pinned) return;
 
     const newTabs = [...tabs];
     const [removed] = newTabs.splice(activeIndex, 1);
@@ -149,8 +140,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       contentKey: tab.href,
       x: 120 + offset,
       y: 80 + offset,
-      width: 480,
-      height: 360,
+      width: 520,
+      height: 420,
       minimized: false,
       zIndex: maxZIndex + 1,
     };
@@ -261,35 +252,22 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     })),
 
   onNavigate: (href) => {
-    const { tabs, activeTabId } = get();
-
+    const { tabs } = get();
     get().closeEphemeralModules();
 
-    const matchingTab = tabs.find((t) => t.href === href);
-    if (matchingTab) {
-      set({ activeTabId: matchingTab.id });
+    if (isWorkspaceTabPath(href)) {
+      const matchingTab = tabs.find((t) => t.href === href);
+      set({ activeTabId: matchingTab?.id ?? null });
       return;
     }
 
-    const routeTab = tabs.find(
-      (t) => t.type === "route" && t.href === href
-    );
-
-    if (routeTab) {
-      set({ activeTabId: routeTab.id });
-      return;
-    }
-
-    const homeTab = tabs.find((t) => t.type === "home");
-    if (homeTab && href === "/dashboard") {
-      set({ activeTabId: homeTab.id });
-    }
+    set({ activeTabId: null });
   },
 
   resetWorkspace: () =>
     set({
-      tabs: [HOME_TAB],
-      activeTabId: HOME_TAB.id,
+      tabs: [],
+      activeTabId: null,
       modules: [],
       popouts: [],
       maxZIndex: 100,

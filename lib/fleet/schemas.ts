@@ -1,0 +1,39 @@
+import { z } from "zod";
+
+export const vehicleSchema = z.object({
+  registration_number: z.string().min(3, "Registration is required"),
+  vehicle_name: z.string().min(2, "Vehicle name is required"),
+  vehicle_model: z.string().min(2, "Model is required"),
+  vehicle_type: z.enum(["Heavy Truck", "Medium Truck", "Light Truck"]),
+  max_load_capacity: z.coerce.number().int().positive("Capacity must be positive"),
+  odometer: z.coerce.number().int().min(0),
+  acquisition_cost: z.coerce.number().min(0),
+  status: z.enum(["Available", "On Trip", "In Shop", "Retired"]),
+  purchase_date: z.string().min(1, "Purchase date is required"),
+});
+
+export const driverSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  license_number: z.string().min(3, "License number is required"),
+  license_category: z.enum(["HMV", "LMV"]),
+  license_expiry: z.string().min(1, "Expiry date is required"),
+  phone: z.string().min(8, "Phone is required"),
+  email: z.string().email("Valid email is required"),
+  safety_score: z.coerce.number().int().min(0).max(100),
+  status: z.enum(["Available", "On Trip", "Off Duty", "Suspended"]),
+});
+
+export const tripSchema = z.object({
+  trip_number: z.string().min(3, "Trip number is required"),
+  source: z.string().min(2, "Source is required"),
+  destination: z.string().min(2, "Destination is required"),
+  vehicle_id: z.string().uuid("Select a vehicle"),
+  driver_id: z.string().uuid("Select a driver"),
+  cargo_weight: z.coerce.number().int().positive("Cargo weight is required"),
+  planned_distance: z.coerce.number().int().positive("Distance is required"),
+  status: z.enum(["Draft", "Dispatched", "Completed", "Cancelled"]),
+});
+
+export type VehicleInput = z.infer<typeof vehicleSchema>;
+export type DriverInput = z.infer<typeof driverSchema>;
+export type TripInput = z.infer<typeof tripSchema>;

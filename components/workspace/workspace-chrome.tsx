@@ -1,6 +1,6 @@
 "use client";
 
-import { useWorkspaceNavigation } from "@/hooks/use-workspace";
+import { useEnsureWorkspaceTab, useWorkspaceNavigation } from "@/hooks/use-workspace";
 import { LinkedWorkspaceHeader } from "./linked-workspace-header";
 import { ModulePanelRail } from "./module-panel";
 import { PopoutLayer } from "./popout-window";
@@ -12,21 +12,24 @@ interface WorkspaceChromeProps {
   children: React.ReactNode;
   role: Role;
   userName: string;
+  userId: string;
 }
 
 export function WorkspaceChrome({
   children,
   role,
   userName,
+  userId,
 }: WorkspaceChromeProps) {
   useWorkspaceNavigation();
+  useEnsureWorkspaceTab({ profileTitle: userName, profileUserId: userId });
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
       <LinkedWorkspaceHeader />
 
       <div className="flex flex-1 overflow-hidden">
-        <WorkspaceSidebar role={role} userName={userName} />
+        <WorkspaceSidebar role={role} userName={userName} userId={userId} />
 
         <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
           <WorkspaceTabBar />

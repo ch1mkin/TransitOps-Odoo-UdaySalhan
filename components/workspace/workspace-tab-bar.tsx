@@ -16,7 +16,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Home, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useWorkspaceStore } from "@/store/workspace-store";
 import { cn } from "@/lib/utils";
@@ -35,10 +35,7 @@ function SortableTab({ tab, isActive }: { tab: WorkspaceTab; isActive: boolean }
     transform,
     transition,
     isDragging,
-  } = useSortable({
-    id: tab.id,
-    disabled: tab.pinned,
-  });
+  } = useSortable({ id: tab.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -55,7 +52,7 @@ function SortableTab({ tab, isActive }: { tab: WorkspaceTab; isActive: boolean }
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group relative flex h-8 max-w-[200px] min-w-[120px] shrink-0 items-center gap-1.5 rounded-t-lg border border-b-0 px-2.5 text-xs transition-colors",
+        "group relative flex h-8 max-w-[220px] min-w-[120px] shrink-0 items-center gap-1.5 rounded-t-lg border border-b-0 px-2.5 text-xs transition-colors",
         isActive
           ? "z-10 border-border bg-workspace-tab-active text-foreground workspace-shadow"
           : "border-transparent bg-workspace-tab text-muted-foreground hover:bg-slate-200/70",
@@ -64,37 +61,29 @@ function SortableTab({ tab, isActive }: { tab: WorkspaceTab; isActive: boolean }
     >
       <button
         type="button"
-        className={cn(
-          "flex min-w-0 flex-1 items-center gap-1.5",
-          !tab.pinned && "cursor-grab active:cursor-grabbing"
-        )}
+        className="flex min-w-0 flex-1 cursor-grab items-center gap-1.5 active:cursor-grabbing"
         onClick={handleActivate}
-        onDoubleClick={() => !tab.pinned && popoutTab(tab.id)}
-        {...(!tab.pinned ? { ...attributes, ...listeners } : {})}
+        onDoubleClick={() => popoutTab(tab.id)}
+        {...attributes}
+        {...listeners}
       >
-        {tab.type === "home" ? (
-          <Home className="size-3.5 shrink-0" />
-        ) : (
-          <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white">
-            {tab.title.charAt(0).toUpperCase()}
-          </span>
-        )}
+        <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-white">
+          {tab.title.charAt(0).toUpperCase()}
+        </span>
         <span className="truncate font-medium">{tab.title}</span>
       </button>
 
-      {!tab.pinned && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            closeTab(tab.id);
-          }}
-          className="rounded p-0.5 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
-          aria-label={`Close ${tab.title}`}
-        >
-          <X className="size-3" />
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          closeTab(tab.id);
+        }}
+        className="rounded p-0.5 opacity-0 transition-opacity hover:bg-muted group-hover:opacity-100"
+        aria-label={`Close ${tab.title}`}
+      >
+        <X className="size-3" />
+      </button>
     </div>
   );
 }
@@ -118,42 +107,34 @@ export function WorkspaceTabBar() {
     }
   };
 
-  const sortableIds = tabs.filter((t) => !t.pinned).map((t) => t.id);
+  if (tabs.length === 0) {
+    return (
+      <div className="flex h-9 items-center border-b border-border bg-workspace-tab px-4">
+        <p className="text-[11px] text-muted-foreground">
+          Open a driver, vehicle, trip, or profile to pin it here — sections stay in the sidebar
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-9 items-end gap-0.5 overflow-x-auto border-b border-border bg-workspace-tab px-2 scrollbar-none">
-      {tabs
-        .filter((t) => t.pinned)
-        .map((tab) => (
-          <SortableTab
-            key={tab.id}
-            tab={tab}
-            isActive={activeTabId === tab.id}
-          />
-        ))}
-
-      {sortableIds.length > 0 && (
-        <div className="mx-1 mb-2 h-px w-3 shrink-0 self-center bg-border" />
-      )}
-
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={sortableIds}
+          items={tabs.map((t) => t.id)}
           strategy={horizontalListSortingStrategy}
         >
-          {tabs
-            .filter((t) => !t.pinned)
-            .map((tab) => (
-              <SortableTab
-                key={tab.id}
-                tab={tab}
-                isActive={activeTabId === tab.id}
-              />
-            ))}
+          {tabs.map((tab) => (
+            <SortableTab
+              key={tab.id}
+              tab={tab}
+              isActive={activeTabId === tab.id}
+            />
+          ))}
         </SortableContext>
       </DndContext>
     </div>

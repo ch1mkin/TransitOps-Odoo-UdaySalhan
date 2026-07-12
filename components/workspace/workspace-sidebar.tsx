@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { getNavForRole, PROFILE_NAV } from "@/constants/navigation";
 import { ROLE_LABELS, type Role } from "@/constants/roles";
-import { useOpenModule, useOpenWorkspaceTab } from "@/hooks/use-workspace";
+import { useProfileTab } from "@/hooks/use-entity-tab";
 import { useWorkspaceStore } from "@/store/workspace-store";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -19,19 +19,18 @@ import { cn } from "@/lib/utils";
 interface WorkspaceSidebarProps {
   role: Role;
   userName: string;
+  userId: string;
 }
 
-export function WorkspaceSidebar({ role, userName }: WorkspaceSidebarProps) {
+export function WorkspaceSidebar({ role, userName, userId }: WorkspaceSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const collapsed = useWorkspaceStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useWorkspaceStore((s) => s.toggleSidebar);
-  const openModule = useOpenModule();
-  const openTab = useOpenWorkspaceTab();
+  const openProfileTab = useProfileTab();
   const navItems = getNavForRole(role);
 
-  const handleNavClick = (title: string, href: string) => {
-    openTab(title, href, { type: "route" });
+  const handleNavClick = (href: string) => {
     router.push(href);
   };
 
@@ -44,11 +43,7 @@ export function WorkspaceSidebar({ role, userName }: WorkspaceSidebarProps) {
   };
 
   const openProfile = () => {
-    openModule("Profile", "profile", "user-profile", {
-      ephemeral: true,
-      width: 400,
-      metadata: { userName, role },
-    });
+    openProfileTab(userName || "Profile", userId);
   };
 
   return (
@@ -97,7 +92,7 @@ export function WorkspaceSidebar({ role, userName }: WorkspaceSidebarProps) {
             <button
               key={item.href}
               type="button"
-              onClick={() => handleNavClick(item.title, item.href)}
+              onClick={() => handleNavClick(item.href)}
               className={cn(
                 "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
                 isActive
@@ -119,7 +114,10 @@ export function WorkspaceSidebar({ role, userName }: WorkspaceSidebarProps) {
           type="button"
           onClick={openProfile}
           className={cn(
-            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+            "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
+            pathname === "/profile"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground",
             collapsed && "justify-center px-2"
           )}
           title={collapsed ? PROFILE_NAV.title : undefined}
