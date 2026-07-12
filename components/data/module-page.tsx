@@ -19,12 +19,16 @@ export function ModulePage({
 }: ModulePageProps) {
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         </div>
-        {actions && <div className="flex shrink-0 gap-2">{actions}</div>}
+        {actions ? (
+          <div className="flex w-full shrink-0 flex-wrap gap-2 sm:w-auto sm:justify-end">
+            {actions}
+          </div>
+        ) : null}
       </div>
 
       {filters}

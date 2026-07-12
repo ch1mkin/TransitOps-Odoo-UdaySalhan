@@ -68,7 +68,7 @@ function SortableTab({
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group relative flex h-8 max-w-[220px] min-w-[120px] shrink-0 items-center gap-1.5 rounded-t-lg border border-b-0 px-2.5 text-xs transition-colors",
+        "group relative flex h-8 max-w-[220px] min-w-[96px] shrink-0 items-center gap-1.5 rounded-t-lg border border-b-0 px-2 text-xs transition-colors sm:min-w-[120px] sm:px-2.5",
         isActive
           ? "z-10 border-border bg-workspace-tab-active text-foreground workspace-shadow"
           : "border-transparent bg-workspace-tab text-muted-foreground hover:bg-slate-200/70",
@@ -137,8 +137,8 @@ export function WorkspaceTabBar() {
 
   if (tabs.length === 0) {
     return (
-      <div className="flex h-9 items-center border-b border-border bg-workspace-tab px-4" data-walkthrough="tab-bar">
-        <p className="text-[11px] text-muted-foreground">
+      <div className="flex h-9 items-center border-b border-border bg-workspace-tab px-3 sm:px-4" data-walkthrough="tab-bar">
+        <p className="text-[10px] text-muted-foreground sm:text-[11px]">
           Open a driver, vehicle, trip, or profile to pin it here — tabs stay until you close them
         </p>
       </div>

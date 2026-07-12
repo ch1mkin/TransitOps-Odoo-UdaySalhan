@@ -52,7 +52,7 @@ export function Dialog({
     <dialog
       ref={dialogRef}
       className={cn(
-        "fixed inset-0 m-auto w-[min(100%,32rem)] max-h-[90vh] overflow-hidden rounded-xl border border-border bg-card p-0 text-foreground shadow-xl backdrop:bg-black/50 open:flex open:flex-col",
+        "fixed inset-0 z-50 m-auto w-[calc(100%-1.5rem)] max-w-[min(100%,32rem)] max-h-[min(90dvh,100%)] overflow-hidden rounded-xl border border-border bg-card p-0 text-foreground shadow-xl backdrop:bg-black/50 open:flex open:flex-col sm:w-[min(100%,32rem)]",
         stackLevel === "nested" ? "z-[60]" : "z-50",
         className
       )}

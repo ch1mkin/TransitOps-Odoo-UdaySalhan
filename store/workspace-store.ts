@@ -51,7 +51,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
       tabs: [],
       activeTabId: null,
       sidebarCollapsed: false,
-      sidebarOpen: true,
+      sidebarOpen: false,
       modules: [],
       popouts: [],
       maxZIndex: 100,

@@ -47,7 +47,7 @@ export function ModuleFilters({
         className
       )}
     >
-      <div className="relative min-w-[200px] flex-1">
+      <div className="relative min-w-0 w-full flex-1 sm:min-w-[200px]">
         <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
@@ -58,7 +58,7 @@ export function ModuleFilters({
       </div>
 
       {filters.map((filter) => (
-        <div key={filter.id} className="flex min-w-[160px] flex-col gap-1">
+        <div key={filter.id} className="flex w-full min-w-0 flex-col gap-1 sm:min-w-[160px] sm:w-auto">
           <label
             htmlFor={filter.id}
             className="text-xs font-medium text-muted-foreground"
@@ -81,7 +81,7 @@ export function ModuleFilters({
       ))}
 
       {onDateFromChange ? (
-        <div className="flex min-w-[140px] flex-col gap-1">
+        <div className="flex w-full min-w-0 flex-col gap-1 sm:min-w-[140px] sm:w-auto">
           <label htmlFor="filter-date-from" className="text-xs font-medium text-muted-foreground">
             From
           </label>
@@ -96,7 +96,7 @@ export function ModuleFilters({
       ) : null}
 
       {onDateToChange ? (
-        <div className="flex min-w-[140px] flex-col gap-1">
+        <div className="flex w-full min-w-0 flex-col gap-1 sm:min-w-[140px] sm:w-auto">
           <label htmlFor="filter-date-to" className="text-xs font-medium text-muted-foreground">
             To
           </label>

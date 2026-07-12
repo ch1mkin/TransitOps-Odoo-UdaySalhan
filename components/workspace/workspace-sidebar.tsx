@@ -51,7 +51,7 @@ export function WorkspaceSidebar({ role, userName, userId }: WorkspaceSidebarPro
     <aside
       data-walkthrough="sidebar"
       className={cn(
-        "flex h-full flex-col border-r border-border bg-card transition-all duration-200",
+        "hidden h-full flex-col border-r border-border bg-card transition-all duration-200 md:flex",
         collapsed ? "w-[60px]" : "w-[240px]"
       )}
     >

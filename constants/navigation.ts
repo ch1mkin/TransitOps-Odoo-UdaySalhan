@@ -149,6 +149,41 @@ export function getNavForRole(role: Role): NavItem[] {
   return NAV_ITEMS.filter((item) => item.roles.includes(role));
 }
 
+const MOBILE_PRIMARY_HREFS: Record<Role, string[]> = {
+  [ROLES.FLEET_MANAGER]: ["/vehicles", "/reports"],
+  [ROLES.DISPATCHER]: ["/trips/active", "/trips"],
+  [ROLES.SAFETY_OFFICER]: ["/drivers", "/license-monitoring"],
+  [ROLES.FINANCIAL_ANALYST]: ["/fuel", "/expenses"],
+};
+
+/** Primary destinations pinned to the mobile bottom bar (excluding the menu button). */
+export function getMobileBottomNavItems(role: Role): NavItem[] {
+  const all = getNavForRole(role);
+  const find = (href: string) => all.find((item) => item.href === href);
+
+  const dashboard = find("/dashboard");
+  const notifications = find("/notifications");
+  const primaries = MOBILE_PRIMARY_HREFS[role]
+    .map((href) => find(href))
+    .filter((item): item is NavItem => Boolean(item));
+
+  return [dashboard, ...primaries, notifications].filter(
+    (item): item is NavItem => Boolean(item)
+  );
+}
+
+/** Remaining navigation items shown inside the mobile menu drawer. */
+export function getMobileMenuNavItems(role: Role): NavItem[] {
+  const pinned = new Set(getMobileBottomNavItems(role).map((item) => item.href));
+  return getNavForRole(role).filter((item) => !pinned.has(item.href));
+}
+
+export function getNavTitleForPath(pathname: string, role: Role): string {
+  const items = getNavForRole(role);
+  const active = getActiveNavHref(pathname, items);
+  return items.find((item) => item.href === active)?.title ?? "TransitOps";
+}
+
 /** Picks the single best-matching nav href (longest prefix match) for the current path. */
 export function getActiveNavHref(pathname: string, navItems: NavItem[]): string | null {
   let best: NavItem | null = null;
