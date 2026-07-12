@@ -23,7 +23,7 @@ export function WorkspaceBottomNav({ role }: WorkspaceBottomNavProps) {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-[70] border-t border-border bg-card/95 backdrop-blur-md md:hidden"
+      className="fixed inset-x-0 bottom-0 z-[70] border-t border-border/80 bg-card/90 backdrop-blur-md md:hidden"
       style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       aria-label="Primary navigation"
     >

@@ -35,8 +35,8 @@ const FEATURES = [
 
 export function WelcomeScreen() {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/80 backdrop-blur-sm">
+    <div className="relative min-h-screen bg-background/80">
+      <header className="border-b border-border/80 bg-card/75 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2.5">
             <BrandLogo variant="icon" size={36} className="rounded-xl" priority />

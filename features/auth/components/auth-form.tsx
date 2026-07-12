@@ -293,8 +293,8 @@ export function AuthForm() {
     <>
       <MinimalConfetti active={showConfetti} />
 
-      <div className="flex min-h-screen items-center justify-center bg-background p-4">
-        <Card className="relative w-full max-w-md overflow-hidden">
+      <div className="flex min-h-screen items-center justify-center bg-background/70 p-4">
+        <Card className="relative w-full max-w-md overflow-hidden border-border/80 bg-card/90 backdrop-blur-md">
           {loading ? (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/85 backdrop-blur-[1px]">
               <TruckLoader

@@ -33,7 +33,7 @@ export function ModulePage({
 
       {filters}
 
-      <div className="rounded-xl border border-border bg-card workspace-shadow">
+      <div className="rounded-xl glass-card workspace-shadow">
         {children}
       </div>
     </div>

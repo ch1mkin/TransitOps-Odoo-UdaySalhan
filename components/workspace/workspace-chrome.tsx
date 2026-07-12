@@ -31,7 +31,7 @@ export function WorkspaceChrome({
   useEnsureWorkspaceTab({ profileTitle: userName, profileUserId: userId });
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-background">
+    <div className="relative flex h-[100dvh] flex-col overflow-hidden bg-background/80">
       <WorkspaceWalkthrough userId={userId} role={role} />
       <LicenseAlertSync role={role} />
 
@@ -49,7 +49,7 @@ export function WorkspaceChrome({
           <div className="flex min-h-0 flex-1 overflow-hidden">
             <main
               data-walkthrough="main-content"
-              className="mobile-main min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-background p-3 pb-20 sm:p-4 sm:pb-20 md:p-6 md:pb-6"
+              className="mobile-main relative z-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-transparent p-3 pb-20 sm:p-4 sm:pb-20 md:p-6 md:pb-6"
             >
               <RouteGuard role={role}>{children}</RouteGuard>
             </main>
