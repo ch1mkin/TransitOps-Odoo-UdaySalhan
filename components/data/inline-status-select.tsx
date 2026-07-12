@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useOptimistic, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
@@ -29,26 +28,27 @@ export function InlineStatusSelect<T extends string>({
   confirmChange,
   className,
 }: InlineStatusSelectProps<T>) {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [pending, setPending] = useState<T | null>(null);
+  const [optimisticValue, setOptimisticValue] = useOptimistic(value, (_current, next: T) => next);
 
-  const applyChange = async (next: T) => {
-    setLoading(true);
-    const result = await onChange(next);
-    setLoading(false);
+  const applyChange = (next: T) => {
+    setOptimisticValue(next);
 
-    if (!result.success) {
-      toast.error(result.error ?? "Status update failed.");
-      return;
-    }
-
-    toast.success("Status updated");
-    router.refresh();
+    startTransition(async () => {
+      const result = await onChange(next);
+      if (!result.success) {
+        setOptimisticValue(value);
+        toast.error(result.error ?? "Status update failed.");
+        return;
+      }
+      toast.success("Status updated");
+      setPending(null);
+    });
   };
 
   const handleChange = (next: T) => {
-    if (next === value || loading) return;
+    if (next === optimisticValue || isPending) return;
 
     const confirmation = confirmChange?.(next);
     if (confirmation) {
@@ -56,15 +56,15 @@ export function InlineStatusSelect<T extends string>({
       return;
     }
 
-    void applyChange(next);
+    applyChange(next);
   };
 
-  const isLocked = disabled || value === "On Trip" || loading;
+  const isLocked = disabled || optimisticValue === "On Trip" || isPending;
 
   return (
     <>
       <select
-        value={value}
+        value={optimisticValue}
         disabled={isLocked}
         onClick={(e) => e.stopPropagation()}
         onChange={(e) => handleChange(e.target.value as T)}
@@ -72,11 +72,12 @@ export function InlineStatusSelect<T extends string>({
           "h-8 min-w-[7.5rem] rounded-lg border border-border bg-background px-2 text-xs font-medium shadow-sm",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           isLocked && "cursor-not-allowed opacity-60",
+          isPending && "opacity-70",
           className
         )}
         aria-label="Change status"
       >
-        {value === "On Trip" && !options.includes("On Trip" as T) ? (
+        {optimisticValue === "On Trip" && !options.includes("On Trip" as T) ? (
           <option value="On Trip">On Trip</option>
         ) : null}
         {options.map((option) => (
@@ -96,7 +97,7 @@ export function InlineStatusSelect<T extends string>({
           description={confirmChange?.(pending)?.description}
           confirmLabel="Confirm"
           destructive={confirmChange?.(pending)?.destructive}
-          loading={loading}
+          loading={isPending}
           onConfirm={() => applyChange(pending)}
         />
       ) : null}

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ExportButton } from "@/components/data/export-button";
 import { TripFormDialog } from "@/features/trips/components/trip-form-dialog";
 import { useEntityTab } from "@/hooks/use-entity-tab";
+import { getTripFilterDate, withinDateRange } from "@/lib/utils/date-filter";
 import type { Driver, Trip, Vehicle } from "@/types/entities";
 
 const STATUS_OPTIONS = [
@@ -45,6 +46,8 @@ export function TripsModule({
   const [statusFilter, setStatusFilter] = useState(
     view === "active" ? "Dispatched" : view === "history" ? "history" : "all"
   );
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [formOpen, setFormOpen] = useState(false);
 
   const viewMeta = {
@@ -133,9 +136,9 @@ export function TripsModule({
             ? trip.status === "Completed" || trip.status === "Cancelled"
             : trip.status === statusFilter;
 
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesStatus && withinDateRange(getTripFilterDate(trip), dateFrom, dateTo);
     });
-  }, [trips, search, statusFilter, vehicleLabels, driverLabels, view]);
+  }, [trips, search, statusFilter, dateFrom, dateTo, vehicleLabels, driverLabels, view]);
 
   const statusOptions =
     view === "history"
@@ -188,6 +191,10 @@ export function TripsModule({
                 onChange: setStatusFilter,
               },
             ]}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={setDateFrom}
+            onDateToChange={setDateTo}
           />
         }
       >

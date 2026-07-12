@@ -21,9 +21,12 @@ import {
   useSettingsStore,
   type RoleSettingsMap,
 } from "@/store/settings-store";
+import { useWalkthroughStore } from "@/store/walkthrough-store";
+import { useWorkspaceStore } from "@/store/workspace-store";
 
 interface SettingsModuleProps {
   role: Role;
+  userId: string;
 }
 
 function SettingRow({
@@ -77,13 +80,15 @@ function Toggle({
   );
 }
 
-export function SettingsModule({ role }: SettingsModuleProps) {
+export function SettingsModule({ role, userId }: SettingsModuleProps) {
   const fleetSettings = useSettingsStore((s) => s.byRole[ROLES.FLEET_MANAGER]);
   const dispatcherSettings = useSettingsStore((s) => s.byRole[ROLES.DISPATCHER]);
   const safetySettings = useSettingsStore((s) => s.byRole[ROLES.SAFETY_OFFICER]);
   const financeSettings = useSettingsStore((s) => s.byRole[ROLES.FINANCIAL_ANALYST]);
   const updateRoleSettings = useSettingsStore((s) => s.updateRoleSettings);
   const resetRoleSettings = useSettingsStore((s) => s.resetRoleSettings);
+  const startWalkthrough = useWalkthroughStore((s) => s.start);
+  const resetWalkthrough = useWalkthroughStore((s) => s.resetForRole);
 
   const roleDescription = useMemo(() => {
     switch (role) {
@@ -127,6 +132,33 @@ export function SettingsModule({ role }: SettingsModuleProps) {
           Preferences are stored locally in your browser for this role.
         </div>
       </ModulePage>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Workspace tour</CardTitle>
+          <CardDescription>
+            Replay the guided walkthrough for your current role ({ROLE_LABELS[role]}).
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="px-6 pb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (userId) {
+                resetWalkthrough(userId, role);
+              }
+              if (useWorkspaceStore.getState().sidebarCollapsed) {
+                useWorkspaceStore.getState().toggleSidebar();
+              }
+              startWalkthrough();
+              toast.success("Tour started");
+            }}
+          >
+            Replay workspace tour
+          </Button>
+        </CardContent>
+      </Card>
 
       {role === ROLES.FLEET_MANAGER && (
         <Card>

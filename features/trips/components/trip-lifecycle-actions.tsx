@@ -1,16 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useTransition, useOptimistic } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  cancelTrip,
-  completeTrip,
-  dispatchTrip,
-} from "@/lib/fleet/actions";
+import { CompleteTripDialog } from "@/features/trips/components/complete-trip-dialog";
+import { cancelTrip, dispatchTrip } from "@/lib/fleet/actions";
 import type { Trip } from "@/types/entities";
 
 interface TripLifecycleActionsProps {
@@ -18,18 +14,13 @@ interface TripLifecycleActionsProps {
   canManageLifecycle: boolean;
 }
 
-type PendingAction = "dispatch" | "complete" | "cancel" | null;
+type PendingAction = "dispatch" | "cancel" | null;
 
 const COPY = {
   dispatch: {
     title: "Dispatch trip?",
     description: "Vehicle and driver will be marked On Trip.",
     label: "Dispatch",
-  },
-  complete: {
-    title: "Complete trip?",
-    description: "Vehicle and driver will return to Available.",
-    label: "Complete",
   },
   cancel: {
     title: "Cancel trip?",
@@ -43,31 +34,45 @@ export function TripLifecycleActions({
   trip,
   canManageLifecycle,
 }: TripLifecycleActionsProps) {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+  const [completeOpen, setCompleteOpen] = useState(false);
+  const [optimisticTrip, setOptimisticTrip] = useOptimistic(trip, (_current, next: Trip) => next);
 
   if (!canManageLifecycle) {
     return null;
   }
 
-  const run = (action: PendingAction) => {
+  const patchTrip = (next: Trip) => {
+    setOptimisticTrip(next);
+    queryClient.setQueryData(["trip", trip.id], next);
+  };
+
+  const runLifecycle = (action: PendingAction) => {
     if (!action) return;
 
     const handlers = {
       dispatch: () => dispatchTrip(trip.id),
-      complete: () => completeTrip(trip.id),
       cancel: () => cancelTrip(trip.id),
     };
+
+    const optimistic: Trip =
+      action === "dispatch"
+        ? { ...optimisticTrip, status: "Dispatched", dispatch_time: new Date().toISOString() }
+        : { ...optimisticTrip, status: "Cancelled" };
+
+    patchTrip(optimistic);
 
     startTransition(async () => {
       const result = await handlers[action]();
       if (!result.success) {
+        patchTrip(trip);
         toast.error(result.error ?? "Action failed");
         return;
       }
       toast.success(`Trip ${COPY[action].label.toLowerCase()} successful`);
-      router.refresh();
+      await queryClient.invalidateQueries({ queryKey: ["trip", trip.id] });
     });
   };
 
@@ -76,17 +81,17 @@ export function TripLifecycleActions({
   return (
     <>
       <div className="flex flex-wrap gap-2">
-        {trip.status === "Draft" && (
+        {optimisticTrip.status === "Draft" && (
           <Button size="sm" disabled={isPending} onClick={() => setPendingAction("dispatch")}>
             Dispatch
           </Button>
         )}
-        {trip.status === "Dispatched" && (
-          <Button size="sm" disabled={isPending} onClick={() => setPendingAction("complete")}>
+        {optimisticTrip.status === "Dispatched" && (
+          <Button size="sm" disabled={isPending} onClick={() => setCompleteOpen(true)}>
             Complete
           </Button>
         )}
-        {(trip.status === "Draft" || trip.status === "Dispatched") && (
+        {(optimisticTrip.status === "Draft" || optimisticTrip.status === "Dispatched") && (
           <Button
             size="sm"
             variant="outline"
@@ -109,9 +114,19 @@ export function TripLifecycleActions({
           confirmLabel={dialogCopy.label}
           destructive={"destructive" in dialogCopy ? dialogCopy.destructive : false}
           loading={isPending}
-          onConfirm={() => run(pendingAction)}
+          onConfirm={() => runLifecycle(pendingAction)}
         />
       ) : null}
+
+      <CompleteTripDialog
+        trip={optimisticTrip}
+        open={completeOpen}
+        onOpenChange={setCompleteOpen}
+        onCompleted={(next) => {
+          patchTrip(next);
+          void queryClient.invalidateQueries({ queryKey: ["trip", trip.id] });
+        }}
+      />
     </>
   );
 }

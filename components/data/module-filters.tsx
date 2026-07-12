@@ -22,6 +22,10 @@ interface ModuleFiltersProps {
   onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
   filters?: ModuleFilterConfig[];
+  dateFrom?: string;
+  dateTo?: string;
+  onDateFromChange?: (value: string) => void;
+  onDateToChange?: (value: string) => void;
   className?: string;
 }
 
@@ -30,6 +34,10 @@ export function ModuleFilters({
   onSearchChange,
   searchPlaceholder = "Search records…",
   filters = [],
+  dateFrom = "",
+  dateTo = "",
+  onDateFromChange,
+  onDateToChange,
   className,
 }: ModuleFiltersProps) {
   return (
@@ -71,6 +79,36 @@ export function ModuleFilters({
           </select>
         </div>
       ))}
+
+      {onDateFromChange ? (
+        <div className="flex min-w-[140px] flex-col gap-1">
+          <label htmlFor="filter-date-from" className="text-xs font-medium text-muted-foreground">
+            From
+          </label>
+          <Input
+            id="filter-date-from"
+            type="date"
+            value={dateFrom}
+            onChange={(e) => onDateFromChange(e.target.value)}
+            className="h-9"
+          />
+        </div>
+      ) : null}
+
+      {onDateToChange ? (
+        <div className="flex min-w-[140px] flex-col gap-1">
+          <label htmlFor="filter-date-to" className="text-xs font-medium text-muted-foreground">
+            To
+          </label>
+          <Input
+            id="filter-date-to"
+            type="date"
+            value={dateTo}
+            onChange={(e) => onDateToChange(e.target.value)}
+            className="h-9"
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

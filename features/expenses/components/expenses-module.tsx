@@ -8,6 +8,7 @@ import { ModuleFilters } from "@/components/data/module-filters";
 import { ModulePage } from "@/components/data/module-page";
 import { Button } from "@/components/ui/button";
 import { ExpenseFormDialog } from "@/features/expenses/components/expense-form-dialog";
+import { withinDateRange } from "@/lib/utils/date-filter";
 import type { ExpenseLog, Vehicle } from "@/types/entities";
 
 interface ExpensesModuleProps {
@@ -24,6 +25,8 @@ export function ExpensesModule({
   canManage = false,
 }: ExpensesModuleProps) {
   const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [formOpen, setFormOpen] = useState(false);
 
   const columns: DataTableColumn<ExpenseLog>[] = useMemo(
@@ -49,17 +52,17 @@ export function ExpensesModule({
   );
 
   const filtered = useMemo(() => {
-    if (!search) return records;
     const q = search.toLowerCase();
     return records.filter((row) => {
       const vehicle = (vehicleLabels[row.vehicle_id] ?? "").toLowerCase();
-      return (
+      const matchesSearch =
+        !q ||
         vehicle.includes(q) ||
         row.category.toLowerCase().includes(q) ||
-        row.description.toLowerCase().includes(q)
-      );
+        row.description.toLowerCase().includes(q);
+      return matchesSearch && withinDateRange(row.date, dateFrom, dateTo);
     });
-  }, [records, search, vehicleLabels]);
+  }, [records, search, dateFrom, dateTo, vehicleLabels]);
 
   return (
     <>
@@ -88,13 +91,17 @@ export function ExpensesModule({
             ) : null}
           </div>
         }
-      filters={
-        <ModuleFilters
-          search={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search vehicle, category, description…"
-        />
-      }
+        filters={
+          <ModuleFilters
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search vehicle, category, description…"
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={setDateFrom}
+            onDateToChange={setDateTo}
+          />
+        }
     >
       <DataTable
         columns={columns}

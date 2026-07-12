@@ -44,8 +44,12 @@ type TripRow = {
   driver_id: string | null;
   cargo_weight: number;
   planned_distance: number;
+  actual_distance?: number | null;
+  fuel_used?: number | string | null;
+  revenue?: number | string | null;
   status: Trip["status"];
   dispatch_time: string | null;
+  completion_time?: string | null;
 };
 
 export function mapVehicle(row: VehicleRow): Vehicle {
@@ -87,8 +91,12 @@ export function mapTrip(row: TripRow): Trip {
     driver_id: row.driver_id ?? "",
     cargo_weight: row.cargo_weight,
     planned_distance: row.planned_distance,
+    actual_distance: row.actual_distance ?? null,
+    fuel_used: row.fuel_used != null ? Number(row.fuel_used) : null,
+    revenue: row.revenue != null ? Number(row.revenue) : null,
     status: row.status,
     dispatch_time: row.dispatch_time,
+    completion_time: row.completion_time ?? null,
   };
 }
 

@@ -17,6 +17,7 @@ import {
 } from "@/lib/fleet/permissions";
 import { requireSessionRole } from "@/lib/fleet/session";
 import {
+  completeTripSchema,
   driverSchema,
   expenseSchema,
   fuelLogSchema,
@@ -24,6 +25,7 @@ import {
   tripSchema,
   vehicleDocumentSchema,
   vehicleSchema,
+  type CompleteTripInput,
   type DriverInput,
   type ExpenseInput,
   type FuelLogInput,
@@ -253,9 +255,17 @@ export async function dispatchTrip(tripId: string): Promise<ActionResult> {
   }
 }
 
-export async function completeTrip(tripId: string): Promise<ActionResult> {
+export async function completeTrip(
+  tripId: string,
+  input: CompleteTripInput
+): Promise<ActionResult> {
   const auth = await requireSessionRole([ROLES.DISPATCHER]);
   if (!auth.ok) return { success: false, error: auth.error };
+
+  const parsed = completeTripSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: formatZodError(parsed.error) };
+  }
 
   try {
     const { trip, vehicle, driver } = await loadTripBundle(tripId);
@@ -266,7 +276,13 @@ export async function completeTrip(tripId: string): Promise<ActionResult> {
 
     const { error } = await supabase
       .from("trips")
-      .update({ status: "Completed", completion_time: now })
+      .update({
+        status: "Completed",
+        completion_time: now,
+        actual_distance: parsed.data.actual_distance,
+        fuel_used: parsed.data.fuel_used,
+        revenue: parsed.data.revenue,
+      })
       .eq("id", tripId);
 
     if (error) return { success: false, error: error.message };
@@ -278,7 +294,7 @@ export async function completeTrip(tripId: string): Promise<ActionResult> {
       tripId,
       actorId: auth.user.id,
       eventType: "completed",
-      message: `Trip ${trip.trip_number} completed.`,
+      message: `Trip ${trip.trip_number} completed — ${parsed.data.actual_distance} km, ₹${parsed.data.revenue.toLocaleString()} revenue.`,
     });
 
     await notifyTripStakeholders(supabase, {

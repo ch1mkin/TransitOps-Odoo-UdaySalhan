@@ -137,7 +137,7 @@ export function WorkspaceTabBar() {
 
   if (tabs.length === 0) {
     return (
-      <div className="flex h-9 items-center border-b border-border bg-workspace-tab px-4">
+      <div className="flex h-9 items-center border-b border-border bg-workspace-tab px-4" data-walkthrough="tab-bar">
         <p className="text-[11px] text-muted-foreground">
           Open a driver, vehicle, trip, or profile to pin it here — tabs stay until you close them
         </p>
@@ -146,7 +146,10 @@ export function WorkspaceTabBar() {
   }
 
   return (
-    <div className="flex h-9 items-end gap-0.5 overflow-x-auto border-b border-border bg-workspace-tab px-2 scrollbar-none">
+    <div
+      data-walkthrough="tab-bar"
+      className="flex h-9 items-end gap-0.5 overflow-x-auto border-b border-border bg-workspace-tab px-2 scrollbar-none"
+    >
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}

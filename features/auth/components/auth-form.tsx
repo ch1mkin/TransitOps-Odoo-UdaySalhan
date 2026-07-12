@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROLE_OPTIONS } from "@/constants/roles";
+import { WALKTHROUGH_PENDING_KEY } from "@/constants/walkthrough";
 import { MinimalConfetti } from "@/features/auth/components/minimal-confetti";
 import {
   PasswordMatchIndicator,
@@ -112,6 +113,7 @@ export function AuthForm() {
 
       if (data.session) {
         toast.success("Welcome back");
+        sessionStorage.setItem(WALKTHROUGH_PENDING_KEY, "1");
         window.location.assign("/dashboard");
         return;
       }
@@ -233,7 +235,7 @@ export function AuthForm() {
                   <Label htmlFor="fullName">Full Name</Label>
                   <Input
                     id="fullName"
-                    placeholder="John Doe"
+                    placeholder="Rajesh Kumar"
                     {...registerForm.register("fullName")}
                   />
                   {registerForm.formState.errors.fullName && (
@@ -249,7 +251,7 @@ export function AuthForm() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@company.com"
+                  placeholder="rajesh.kumar@transitops.in"
                   {...(isLogin
                     ? loginForm.register("email")
                     : registerForm.register("email"))}

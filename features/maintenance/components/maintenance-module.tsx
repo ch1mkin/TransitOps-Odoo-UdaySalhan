@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { MaintenanceFormDialog } from "@/features/maintenance/components/maintenance-form-dialog";
 import { closeMaintenance } from "@/lib/fleet/actions";
+import { withinDateRange } from "@/lib/utils/date-filter";
 import type { MaintenanceLog, Vehicle } from "@/types/entities";
 
 interface MaintenanceModuleProps {
@@ -31,6 +32,8 @@ export function MaintenanceModule({
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [closingId, setClosingId] = useState<string | null>(null);
   const [confirmCloseId, setConfirmCloseId] = useState<string | null>(null);
@@ -110,9 +113,9 @@ export function MaintenanceModule({
         row.maintenance_type.toLowerCase().includes(q) ||
         row.service_center.toLowerCase().includes(q);
       const matchesStatus = status === "all" || row.status === status;
-      return matchesSearch && matchesStatus;
+      return matchesSearch && matchesStatus && withinDateRange(row.opened_at, dateFrom, dateTo);
     });
-  }, [records, search, status, vehicleLabels]);
+  }, [records, search, status, dateFrom, dateTo, vehicleLabels]);
 
   return (
     <>
@@ -161,6 +164,10 @@ export function MaintenanceModule({
                 onChange: setStatus,
               },
             ]}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={setDateFrom}
+            onDateToChange={setDateTo}
           />
         }
       >

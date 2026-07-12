@@ -8,6 +8,7 @@ import { ModuleFilters } from "@/components/data/module-filters";
 import { ModulePage } from "@/components/data/module-page";
 import { Button } from "@/components/ui/button";
 import { FuelFormDialog } from "@/features/fuel/components/fuel-form-dialog";
+import { withinDateRange } from "@/lib/utils/date-filter";
 import type { FuelLog, Vehicle } from "@/types/entities";
 
 interface FuelModuleProps {
@@ -24,6 +25,8 @@ export function FuelModule({
   canManage = false,
 }: FuelModuleProps) {
   const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [formOpen, setFormOpen] = useState(false);
 
   const columns: DataTableColumn<FuelLog>[] = useMemo(
@@ -59,13 +62,14 @@ export function FuelModule({
   );
 
   const filtered = useMemo(() => {
-    if (!search) return records;
-    const q = search.toLowerCase();
     return records.filter((row) => {
+      const q = search.toLowerCase();
       const vehicle = (vehicleLabels[row.vehicle_id] ?? "").toLowerCase();
-      return vehicle.includes(q) || row.date.includes(q);
+      const matchesSearch =
+        !q || vehicle.includes(q) || row.date.includes(q);
+      return matchesSearch && withinDateRange(row.date, dateFrom, dateTo);
     });
-  }, [records, search, vehicleLabels]);
+  }, [records, search, dateFrom, dateTo, vehicleLabels]);
 
   return (
     <>
@@ -94,13 +98,17 @@ export function FuelModule({
             ) : null}
           </div>
         }
-      filters={
-        <ModuleFilters
-          search={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search vehicle or date…"
-        />
-      }
+        filters={
+          <ModuleFilters
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search vehicle or date…"
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            onDateFromChange={setDateFrom}
+            onDateToChange={setDateTo}
+          />
+        }
     >
       <DataTable
         columns={columns}

@@ -53,7 +53,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   };
 
   return (
-    <div className="relative ml-auto">
+    <div className="relative ml-auto" data-walkthrough="notifications">
       <Button
         variant="ghost"
         size="icon"

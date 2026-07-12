@@ -28,6 +28,10 @@ import {
 } from "@/components/charts/chart-theme";
 import { ChartTooltip } from "@/components/charts/chart-tooltip";
 import { isLicenseExpired } from "@/lib/fleet/trip-lifecycle";
+import {
+  computeAverageFuelEfficiency,
+  getTopPerformingDrivers,
+} from "@/lib/fleet/metrics";
 import type { Driver, ExpenseLog, FuelLog, MaintenanceLog, Trip, Vehicle } from "@/types/entities";
 
 export type FleetChartsVariant = "fleet" | "safety" | "financial" | "all";
@@ -198,6 +202,24 @@ export function FleetCharts({
 
   const heatmapMonths = maintenanceHeatmap[0]?.cells.map((c) => c.month) ?? [];
 
+  const fuelEfficiency = computeAverageFuelEfficiency(trips, fuelLogs);
+
+  const fuelEfficiencyTrend = useMemo(() => {
+    return fuelLogs
+      .slice()
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((log) => ({
+        date: formatCompactDate(log.date),
+        kmPerLiter:
+          log.liters > 0 ? Math.round((log.odometer / log.liters) * 10) / 10 : 0,
+      }));
+  }, [fuelLogs]);
+
+  const topDrivers = useMemo(
+    () => getTopPerformingDrivers(drivers, trips),
+    [drivers, trips]
+  );
+
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       {showFleet ? (
@@ -354,6 +376,40 @@ export function FleetCharts({
               </table>
             </div>
           </ChartCard>
+          <ChartCard
+            title="Fuel efficiency"
+            description="Fleet average and per-fill efficiency trend"
+            footer={`Fleet average: ${fuelEfficiency} km/L`}
+          >
+            <div className="flex h-[240px] flex-col items-center justify-center border-b border-border pb-3">
+              <p className="text-3xl font-semibold tabular-nums tracking-tight">
+                {fuelEfficiency} km/L
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">Average across completed trips</p>
+            </div>
+            {fuelEfficiencyTrend.length > 0 ? (
+              <ResponsiveContainer width="100%" height={180}>
+                <LineChart data={fuelEfficiencyTrend}>
+                  <CartesianGrid {...CHART_GRID} />
+                  <XAxis dataKey="date" {...CHART_AXIS} />
+                  <YAxis {...CHART_AXIS} width={40} />
+                  <Tooltip
+                    content={
+                      <ChartTooltip valueFormatter={(v) => `${v} km/L`} />
+                    }
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="kmPerLiter"
+                    name="Efficiency"
+                    stroke={CHART_COLORS.success}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : null}
+          </ChartCard>
         </>
       ) : null}
 
@@ -410,6 +466,33 @@ export function FleetCharts({
                 <YAxis type="category" dataKey="name" {...CHART_AXIS} width={56} />
                 <Tooltip content={<ChartTooltip />} />
                 <Bar dataKey="score" name="Score" fill={CHART_COLORS.primary} radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartCard>
+          <ChartCard
+            title="Top performing drivers"
+            description="Completed trips and safety score composite"
+            empty={topDrivers.length === 0}
+            className="lg:col-span-2"
+          >
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={topDrivers}>
+                <CartesianGrid {...CHART_GRID} />
+                <XAxis dataKey="name" {...CHART_AXIS} />
+                <YAxis allowDecimals={false} {...CHART_AXIS} width={32} />
+                <Tooltip content={<ChartTooltip />} />
+                <Bar
+                  dataKey="completedTrips"
+                  name="Completed trips"
+                  fill={CHART_COLORS.accent}
+                  radius={[6, 6, 0, 0]}
+                />
+                <Bar
+                  dataKey="safetyScore"
+                  name="Safety score"
+                  fill={CHART_COLORS.success}
+                  radius={[6, 6, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </ChartCard>

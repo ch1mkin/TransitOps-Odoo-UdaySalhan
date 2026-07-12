@@ -158,8 +158,27 @@
     .loader-dashes,
     .loader-bar,
     .loader-road-fill,
-    .truck-road {
+    .truck-road,
+    .walkthrough-spotlight {
       animation: none;
     }
+  }
+
+  @keyframes walkthrough-pulse {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 9999px rgba(0, 0, 0, 0.62),
+        0 0 0 0 rgba(37, 99, 235, 0.5);
+    }
+    50% {
+      box-shadow:
+        0 0 0 9999px rgba(0, 0, 0, 0.62),
+        0 0 0 6px rgba(37, 99, 235, 0.35);
+    }
+  }
+
+  .walkthrough-spotlight {
+    animation: walkthrough-pulse 2s ease-in-out infinite;
   }
 }

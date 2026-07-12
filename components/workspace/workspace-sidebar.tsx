@@ -48,6 +48,7 @@ export function WorkspaceSidebar({ role, userName, userId }: WorkspaceSidebarPro
 
   return (
     <aside
+      data-walkthrough="sidebar"
       className={cn(
         "flex h-full flex-col border-r border-border bg-card transition-all duration-200",
         collapsed ? "w-[60px]" : "w-[240px]"
@@ -92,6 +93,7 @@ export function WorkspaceSidebar({ role, userName, userId }: WorkspaceSidebarPro
             <button
               key={item.href}
               type="button"
+              data-walkthrough-nav={item.href}
               onClick={() => handleNavClick(item.href)}
               className={cn(
                 "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
@@ -112,6 +114,7 @@ export function WorkspaceSidebar({ role, userName, userId }: WorkspaceSidebarPro
       <div className="space-y-0.5 border-t border-border p-2">
         <button
           type="button"
+          data-walkthrough="profile"
           onClick={openProfile}
           className={cn(
             "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",

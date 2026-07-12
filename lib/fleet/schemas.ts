@@ -70,6 +70,13 @@ export const vehicleDocumentSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
+export const completeTripSchema = z.object({
+  actual_distance: z.coerce.number().int().positive("Actual distance is required"),
+  fuel_used: z.coerce.number().min(0, "Fuel used must be non-negative"),
+  revenue: z.coerce.number().min(0, "Revenue must be non-negative"),
+});
+
+export type CompleteTripInput = z.infer<typeof completeTripSchema>;
 export type VehicleInput = z.infer<typeof vehicleSchema>;
 export type DriverInput = z.infer<typeof driverSchema>;
 export type TripInput = z.infer<typeof tripSchema>;

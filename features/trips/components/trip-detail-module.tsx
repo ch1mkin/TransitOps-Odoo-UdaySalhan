@@ -87,6 +87,26 @@ export function TripDetailModule({
               ? new Date(trip.dispatch_time).toLocaleString()
               : "—",
           },
+          {
+            label: "Actual Distance",
+            value: trip.actual_distance
+              ? `${trip.actual_distance.toLocaleString()} km`
+              : "—",
+          },
+          {
+            label: "Fuel Used",
+            value: trip.fuel_used != null ? `${trip.fuel_used.toLocaleString()} L` : "—",
+          },
+          {
+            label: "Revenue",
+            value: trip.revenue != null ? `₹${trip.revenue.toLocaleString()}` : "—",
+          },
+          {
+            label: "Completion Time",
+            value: trip.completion_time
+              ? new Date(trip.completion_time).toLocaleString()
+              : "—",
+          },
           { label: "Status", value: <StatusBadge status={trip.status} /> },
         ]}
       />

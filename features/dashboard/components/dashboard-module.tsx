@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { FleetCharts } from "@/features/reports/components/fleet-charts";
 import { ROLES, type Role } from "@/constants/roles";
+import { computeAverageFuelEfficiency } from "@/lib/fleet/metrics";
 import { isLicenseExpired } from "@/lib/fleet/trip-lifecycle";
 import { useEntityTab } from "@/hooks/use-entity-tab";
 import type { Driver, ExpenseLog, FuelLog, MaintenanceLog, Trip, Vehicle } from "@/types/entities";
@@ -157,6 +158,7 @@ export function DashboardModule({
       const fuelCost = fuelLogs.reduce((sum, log) => sum + log.cost, 0);
       const expenseTotal = expenses.reduce((sum, log) => sum + log.amount, 0);
       const maintenanceCost = maintenanceLogs.reduce((sum, log) => sum + log.cost, 0);
+      const fuelEfficiency = computeAverageFuelEfficiency(trips, fuelLogs);
       const completedTrips = trips.filter((t) => t.status === "Completed").length;
       const revenue = trips
         .filter((t) => t.status === "Completed")
@@ -166,6 +168,7 @@ export function DashboardModule({
         { label: "Fuel Cost", value: `₹${fuelCost.toLocaleString()}` },
         { label: "Total Expenses", value: `₹${expenseTotal.toLocaleString()}` },
         { label: "Maintenance Cost", value: `₹${maintenanceCost.toLocaleString()}` },
+        { label: "Avg Fuel Efficiency", value: `${fuelEfficiency} km/L` },
         {
           label: "Operational Cost",
           value: `₹${(fuelCost + expenseTotal + maintenanceCost).toLocaleString()}`,
@@ -178,6 +181,7 @@ export function DashboardModule({
     const activeVehicles = vehicles.filter((v) => v.status !== "Retired").length;
     const availableVehicles = vehicles.filter((v) => v.status === "Available").length;
     const inShop = vehicles.filter((v) => v.status === "In Shop").length;
+    const retiredVehicles = vehicles.filter((v) => v.status === "Retired").length;
     const onTripVehicles = vehicles.filter((v) => v.status === "On Trip").length;
     const driversOnTrip = drivers.filter((d) => d.status === "On Trip").length;
     const driversOnDuty = drivers.filter((d) => d.status === "Available").length;
@@ -189,18 +193,20 @@ export function DashboardModule({
     const fuelCost = fuelLogs.reduce((sum, log) => sum + log.cost, 0);
     const expenseTotal = expenses.reduce((sum, log) => sum + log.amount, 0);
     const maintenanceCost = maintenanceLogs.reduce((sum, log) => sum + log.cost, 0);
+    const fuelEfficiency = computeAverageFuelEfficiency(trips, fuelLogs);
 
     return [
       { label: "Active Vehicles", value: String(activeVehicles) },
       { label: "Available Vehicles", value: String(availableVehicles) },
       { label: "Vehicles In Shop", value: String(inShop) },
+      { label: "Retired Vehicles", value: String(retiredVehicles) },
       { label: "Drivers On Duty", value: String(driversOnDuty) },
       { label: "Drivers On Trip", value: String(driversOnTrip) },
       { label: "Pending Trips", value: String(pendingTrips) },
       { label: "Active Trips", value: String(activeTrips) },
       { label: "Completed Trips", value: String(completedTrips) },
       { label: "Fleet Utilization", value: `${utilization}%` },
-      { label: "Fuel Cost", value: `₹${fuelCost.toLocaleString()}` },
+      { label: "Avg Fuel Efficiency", value: `${fuelEfficiency} km/L` },
       { label: "Maintenance Cost", value: `₹${maintenanceCost.toLocaleString()}` },
       { label: "Operational Cost", value: `₹${(fuelCost + expenseTotal + maintenanceCost).toLocaleString()}` },
     ];
