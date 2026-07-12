@@ -18,6 +18,7 @@ export interface SafetyOfficerSettings {
   licenseExpiryWarningDays: number;
   minimumSafetyScore: number;
   highlightSuspendedDrivers: boolean;
+  sendLicenseEmailReminders: boolean;
 }
 
 export interface FinancialAnalystSettings {
@@ -48,6 +49,7 @@ export const DEFAULT_ROLE_SETTINGS: RoleSettingsMap = {
     licenseExpiryWarningDays: 30,
     minimumSafetyScore: 70,
     highlightSuspendedDrivers: true,
+    sendLicenseEmailReminders: true,
   },
   [ROLES.FINANCIAL_ANALYST]: {
     roiAmortizationPercent: 10,

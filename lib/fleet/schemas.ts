@@ -74,6 +74,7 @@ export const completeTripSchema = z.object({
   actual_distance: z.coerce.number().int().positive("Actual distance is required"),
   fuel_used: z.coerce.number().min(0, "Fuel used must be non-negative"),
   revenue: z.coerce.number().min(0, "Revenue must be non-negative"),
+  closing_odometer: z.coerce.number().int().min(0, "Closing odometer is required"),
 });
 
 export type CompleteTripInput = z.infer<typeof completeTripSchema>;

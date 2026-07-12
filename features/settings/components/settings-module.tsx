@@ -23,6 +23,7 @@ import {
 } from "@/store/settings-store";
 import { useWalkthroughStore } from "@/store/walkthrough-store";
 import { useWorkspaceStore } from "@/store/workspace-store";
+import { useThemeStore, type ThemeMode } from "@/store/theme-store";
 
 interface SettingsModuleProps {
   role: Role;
@@ -89,6 +90,8 @@ export function SettingsModule({ role, userId }: SettingsModuleProps) {
   const resetRoleSettings = useSettingsStore((s) => s.resetRoleSettings);
   const startWalkthrough = useWalkthroughStore((s) => s.start);
   const resetWalkthrough = useWalkthroughStore((s) => s.resetForRole);
+  const themeMode = useThemeStore((s) => s.mode);
+  const setThemeMode = useThemeStore((s) => s.setMode);
 
   const roleDescription = useMemo(() => {
     switch (role) {
@@ -132,6 +135,32 @@ export function SettingsModule({ role, userId }: SettingsModuleProps) {
           Preferences are stored locally in your browser for this role.
         </div>
       </ModulePage>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Appearance</CardTitle>
+          <CardDescription>Choose how TransitOps looks on this device.</CardDescription>
+        </CardHeader>
+        <CardContent className="px-6 pb-2">
+          <SettingRow
+            label="Color theme"
+            description="Light, dark, or match your system preference."
+          >
+            <Select
+              value={themeMode}
+              onChange={(e) => {
+                setThemeMode(e.target.value as ThemeMode);
+                toast.success("Theme updated");
+              }}
+              className="max-w-[200px]"
+            >
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="system">System</option>
+            </Select>
+          </SettingRow>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -296,6 +325,16 @@ export function SettingsModule({ role, userId }: SettingsModuleProps) {
                 onChange={(e) =>
                   save({ minimumSafetyScore: Number(e.target.value) })
                 }
+              />
+            </SettingRow>
+            <SettingRow
+              label="Email license reminders"
+              description="Send expiry emails to drivers when Resend is configured (in-app alerts always run)."
+            >
+              <Toggle
+                label="Email license reminders"
+                checked={safetySettings.sendLicenseEmailReminders}
+                onChange={(v) => save({ sendLicenseEmailReminders: v })}
               />
             </SettingRow>
             <SettingRow

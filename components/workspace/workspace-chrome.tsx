@@ -3,6 +3,7 @@
 import { useEnsureWorkspaceTab, useWorkspaceNavigation } from "@/hooks/use-workspace";
 import { WorkspaceWalkthrough } from "@/components/walkthrough/workspace-walkthrough";
 import { RouteGuard } from "@/components/access/route-guard";
+import { LicenseAlertSync } from "@/components/compliance/license-alert-sync";
 import { LinkedWorkspaceHeader } from "./linked-workspace-header";
 import { ModulePanelRail } from "./module-panel";
 import { PopoutLayer } from "./popout-window";
@@ -29,6 +30,7 @@ export function WorkspaceChrome({
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
       <WorkspaceWalkthrough userId={userId} role={role} />
+      <LicenseAlertSync role={role} />
       <LinkedWorkspaceHeader userId={userId} />
 
       <div className="flex flex-1 overflow-hidden">

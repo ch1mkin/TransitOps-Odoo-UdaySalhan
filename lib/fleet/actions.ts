@@ -301,14 +301,24 @@ export async function completeTrip(
 
     if (error) return { success: false, error: error.message };
 
-    await supabase.from("vehicles").update({ status: "Available" }).eq("id", vehicle.id);
+    if (parsed.data.closing_odometer < vehicle.odometer) {
+      return {
+        success: false,
+        error: `Closing odometer must be at least ${vehicle.odometer} km.`,
+      };
+    }
+
+    await supabase
+      .from("vehicles")
+      .update({ status: "Available", odometer: parsed.data.closing_odometer })
+      .eq("id", vehicle.id);
     await supabase.from("drivers").update({ status: "Available" }).eq("id", driver.id);
 
     await recordTripUpdate(supabase, {
       tripId,
       actorId: auth.user.id,
       eventType: "completed",
-      message: `Trip ${trip.trip_number} completed — ${parsed.data.actual_distance} km, ${formatCurrency(parsed.data.revenue)} revenue.`,
+      message: `Trip ${trip.trip_number} completed — ${parsed.data.actual_distance} km, odometer ${parsed.data.closing_odometer} km, ${formatCurrency(parsed.data.revenue)} revenue.`,
     });
 
     await notifyTripStakeholders(supabase, {
