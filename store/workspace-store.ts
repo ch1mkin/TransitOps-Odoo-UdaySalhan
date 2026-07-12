@@ -232,8 +232,11 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         })),
 
       closePopout: (popoutId) => {
-        const href = get().dockPopout(popoutId);
-        return href;
+        const popout = get().popouts.find((p) => p.id === popoutId);
+        if (!popout) return null;
+
+        get().closeTab(popout.tabId);
+        return null;
       },
 
       minimizePopout: (popoutId) =>

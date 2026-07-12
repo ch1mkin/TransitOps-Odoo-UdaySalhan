@@ -159,6 +159,15 @@
     animation: walkthrough-arrow-bounce 1.1s ease-in-out infinite;
   }
 
+  .recharts-tooltip-cursor,
+  .recharts-rectangle.recharts-tooltip-cursor {
+    display: none;
+  }
+
+  .recharts-active-dot ~ .recharts-tooltip-cursor {
+    display: none;
+  }
+
   @keyframes walkthrough-pulse {
     0%,
     100% {

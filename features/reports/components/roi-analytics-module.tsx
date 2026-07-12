@@ -153,6 +153,7 @@ export function RoiAnalyticsModule({
             <XAxis dataKey="name" {...CHART_AXIS} />
             <YAxis {...CHART_AXIS} width={40} tickFormatter={(v) => `${v}%`} />
             <Tooltip
+              cursor={false}
               content={
                 <ChartTooltip
                   valueFormatter={(v, key) =>

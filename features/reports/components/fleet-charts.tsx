@@ -268,7 +268,7 @@ export function FleetCharts({
                     />
                   ))}
                 </Pie>
-                <Tooltip content={<ChartTooltip />} />
+                <Tooltip cursor={false} content={<ChartTooltip />} />
                 <Legend
                   verticalAlign="bottom"
                   iconType="circle"
@@ -289,7 +289,7 @@ export function FleetCharts({
                 <CartesianGrid {...CHART_GRID} />
                 <XAxis dataKey="name" {...CHART_AXIS} />
                 <YAxis allowDecimals={false} {...CHART_AXIS} width={32} />
-                <Tooltip content={<ChartTooltip />} />
+                <Tooltip cursor={false} content={<ChartTooltip />} />
                 <Bar dataKey="value" name="Trips" radius={[6, 6, 0, 0]}>
                   {tripsByStatus.map((entry) => (
                     <Cell
@@ -318,7 +318,7 @@ export function FleetCharts({
                 <CartesianGrid {...CHART_GRID} />
                 <XAxis dataKey="month" {...CHART_AXIS} />
                 <YAxis {...CHART_AXIS} width={48} tickFormatter={formatCompactCurrency} />
-                <Tooltip content={<ChartTooltip valueFormatter={(v) => formatCurrency(v)} />} />
+                <Tooltip cursor={false} content={<ChartTooltip valueFormatter={(v) => formatCurrency(v)} />} />
                 <Area
                   type="monotone"
                   dataKey="cost"
@@ -396,6 +396,7 @@ export function FleetCharts({
                   <XAxis dataKey="date" {...CHART_AXIS} />
                   <YAxis {...CHART_AXIS} width={40} />
                   <Tooltip
+                    cursor={false}
                     content={
                       <ChartTooltip valueFormatter={(v) => `${v} km/L`} />
                     }
@@ -446,7 +447,7 @@ export function FleetCharts({
                     />
                   ))}
                 </Pie>
-                <Tooltip content={<ChartTooltip />} />
+                <Tooltip cursor={false} content={<ChartTooltip />} />
                 <Legend
                   verticalAlign="bottom"
                   iconType="circle"
@@ -466,7 +467,7 @@ export function FleetCharts({
                 <CartesianGrid {...CHART_GRID} horizontal={false} />
                 <XAxis type="number" domain={[0, 100]} {...CHART_AXIS} />
                 <YAxis type="category" dataKey="name" {...CHART_AXIS} width={56} />
-                <Tooltip content={<ChartTooltip />} />
+                <Tooltip cursor={false} content={<ChartTooltip />} />
                 <Bar dataKey="score" name="Score" fill={CHART_COLORS.primary} radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -482,7 +483,7 @@ export function FleetCharts({
                 <CartesianGrid {...CHART_GRID} />
                 <XAxis dataKey="name" {...CHART_AXIS} />
                 <YAxis allowDecimals={false} {...CHART_AXIS} width={32} />
-                <Tooltip content={<ChartTooltip />} />
+                <Tooltip cursor={false} content={<ChartTooltip />} />
                 <Bar
                   dataKey="completedTrips"
                   name="Completed trips"
@@ -514,6 +515,7 @@ export function FleetCharts({
                 <XAxis dataKey="date" {...CHART_AXIS} />
                 <YAxis {...CHART_AXIS} width={40} />
                 <Tooltip
+                  cursor={false}
                   content={
                     <ChartTooltip
                       valueFormatter={(v, key) =>
@@ -552,6 +554,7 @@ export function FleetCharts({
                 <XAxis dataKey="date" {...CHART_AXIS} />
                 <YAxis {...CHART_AXIS} width={48} tickFormatter={formatCompactCurrency} />
                 <Tooltip
+                  cursor={false}
                   content={
                     <ChartTooltip valueFormatter={(v) => formatCurrency(v)} />
                   }
@@ -584,6 +587,7 @@ export function FleetCharts({
                   tickFormatter={formatCompactCurrency}
                 />
                 <Tooltip
+                  cursor={false}
                   content={
                     <ChartTooltip valueFormatter={(v) => formatCurrency(v)} />
                   }

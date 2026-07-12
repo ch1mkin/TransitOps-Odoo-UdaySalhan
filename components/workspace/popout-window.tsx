@@ -18,7 +18,6 @@ export function PopoutWindowFrame({ popout }: PopoutWindowFrameProps) {
   const dockPopout = useWorkspaceStore((s) => s.dockPopout);
   const closePopout = useWorkspaceStore((s) => s.closePopout);
   const minimizePopout = useWorkspaceStore((s) => s.minimizePopout);
-  const restorePopout = useWorkspaceStore((s) => s.restorePopout);
   const updatePosition = useWorkspaceStore((s) => s.updatePopoutPosition);
   const bringToFront = useWorkspaceStore((s) => s.bringPopoutToFront);
 
@@ -60,19 +59,6 @@ export function PopoutWindowFrame({ popout }: PopoutWindowFrameProps) {
     setIsDragging(false);
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
   };
-
-  if (popout.minimized) {
-    return (
-      <button
-        type="button"
-        onClick={() => restorePopout(popout.id)}
-        className="fixed bottom-4 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium workspace-shadow hover:bg-muted"
-        style={{ left: popout.x, zIndex: popout.zIndex }}
-      >
-        {popout.title}
-      </button>
-    );
-  }
 
   return (
     <div
@@ -125,11 +111,8 @@ export function PopoutWindowFrame({ popout }: PopoutWindowFrameProps) {
             variant="ghost"
             size="icon"
             className="size-7"
-            onClick={() => {
-              const href = closePopout(popout.id);
-              if (href) router.push(href);
-            }}
-            aria-label="Merge into tabs and close window"
+            onClick={() => closePopout(popout.id)}
+            aria-label="Close window and remove tab"
           >
             <X className="size-3.5" />
           </Button>
@@ -143,16 +126,50 @@ export function PopoutWindowFrame({ popout }: PopoutWindowFrameProps) {
   );
 }
 
+interface MinimizedPopoutButtonProps {
+  popout: PopoutWindow;
+}
+
+function MinimizedPopoutButton({ popout }: MinimizedPopoutButtonProps) {
+  const restorePopout = useWorkspaceStore((s) => s.restorePopout);
+  const bringToFront = useWorkspaceStore((s) => s.bringPopoutToFront);
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        bringToFront(popout.id);
+        restorePopout(popout.id);
+      }}
+      className="max-w-[180px] truncate rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium workspace-shadow hover:bg-muted"
+      style={{ zIndex: popout.zIndex }}
+      title={popout.title}
+    >
+      {popout.title}
+    </button>
+  );
+}
+
 export function PopoutLayer() {
   const popouts = useWorkspaceStore((s) => s.popouts);
+  const openPopouts = popouts.filter((popout) => !popout.minimized);
+  const minimizedPopouts = popouts.filter((popout) => popout.minimized);
 
   if (popouts.length === 0) return null;
 
   return (
     <>
-      {popouts.map((popout) => (
+      {openPopouts.map((popout) => (
         <PopoutWindowFrame key={popout.id} popout={popout} />
       ))}
+
+      {minimizedPopouts.length > 0 ? (
+        <div className="fixed inset-x-0 bottom-0 z-[90] flex items-center gap-2 border-t border-border bg-workspace-bar/95 px-3 py-2 backdrop-blur-sm">
+          {minimizedPopouts.map((popout) => (
+            <MinimizedPopoutButton key={popout.id} popout={popout} />
+          ))}
+        </div>
+      ) : null}
     </>
   );
 }
