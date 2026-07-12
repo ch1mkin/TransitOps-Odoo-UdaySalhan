@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, Loader2, Truck } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Loader2, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROLE_OPTIONS } from "@/constants/roles";
+import {
+  PasswordMatchIndicator,
+  PasswordRequirements,
+} from "@/features/auth/components/password-feedback";
 import { createClient } from "@/lib/supabase/client";
+import {
+  getSupabaseEnvErrorMessage,
+  mapSupabaseAuthError,
+} from "@/lib/supabase/env";
 import {
   loginSchema,
   registerSchema,
@@ -25,15 +33,26 @@ import {
   type RegisterFormValues,
 } from "@/schemas/auth";
 
+function getSupabaseClient() {
+  try {
+    return createClient();
+  } catch (error) {
+    throw new Error(getSupabaseEnvErrorMessage(error));
+  }
+}
+
 export function AuthForm() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [configError, setConfigError] = useState<string | null>(null);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
+    mode: "onChange",
   });
 
   const registerForm = useForm<RegisterFormValues>({
@@ -45,72 +64,93 @@ export function AuthForm() {
       confirmPassword: "",
       role: undefined,
     },
+    mode: "onChange",
   });
 
   const isLogin = mode === "login";
+  const registerPassword = registerForm.watch("password");
+  const registerConfirmPassword = registerForm.watch("confirmPassword");
+
+  useEffect(() => {
+    try {
+      getSupabaseClient();
+      setConfigError(null);
+    } catch (error) {
+      setConfigError(getSupabaseEnvErrorMessage(error));
+    }
+  }, []);
 
   const handleLogin = async (values: LoginFormValues) => {
     setLoading(true);
-    const supabase = createClient();
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: values.email,
-      password: values.password,
-    });
+    try {
+      const supabase = getSupabaseClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
 
-    setLoading(false);
+      if (error) {
+        toast.error(mapSupabaseAuthError(error.message));
+        return;
+      }
 
-    if (error) {
-      toast.error(error.message);
-      return;
+      toast.success("Welcome back");
+      router.push("/dashboard");
+      router.refresh();
+    } catch (error) {
+      toast.error(getSupabaseEnvErrorMessage(error));
+    } finally {
+      setLoading(false);
     }
-
-    toast.success("Welcome back");
-    router.push("/dashboard");
-    router.refresh();
   };
 
   const handleRegister = async (values: RegisterFormValues) => {
     setLoading(true);
-    const supabase = createClient();
 
-    const { data, error } = await supabase.auth.signUp({
-      email: values.email,
-      password: values.password,
-      options: {
-        data: {
-          full_name: values.fullName,
-          role: values.role,
-        },
-      },
-    });
-
-    if (error) {
-      setLoading(false);
-      toast.error(error.message);
-      return;
-    }
-
-    if (data.user) {
-      const { error: profileError } = await supabase.from("profiles").upsert({
-        id: data.user.id,
-        full_name: values.fullName,
+    try {
+      const supabase = getSupabaseClient();
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
-        role: values.role,
-        updated_at: new Date().toISOString(),
+        password: values.password,
+        options: {
+          data: {
+            full_name: values.fullName,
+            role: values.role,
+          },
+        },
       });
 
-      if (profileError) {
-        setLoading(false);
-        toast.error(profileError.message);
+      if (error) {
+        toast.error(mapSupabaseAuthError(error.message));
         return;
       }
-    }
 
-    setLoading(false);
-    toast.success("Account created successfully");
-    router.push("/dashboard");
-    router.refresh();
+      // Profile is created by the handle_new_user() DB trigger — no client upsert
+      // (client upsert fails RLS when email confirmation is on and no session exists yet)
+      if (data.session) {
+        toast.success("Account created successfully");
+        router.push("/dashboard");
+        router.refresh();
+        return;
+      }
+
+      if (data.user) {
+        toast.success(
+          "Account created! If email confirmation is enabled, check your inbox then sign in."
+        );
+        setMode("login");
+        return;
+      }
+
+      toast.success("Account created successfully");
+      router.push("/dashboard");
+      router.refresh();
+    } catch (error) {
+      toast.error(getSupabaseEnvErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onSubmit = isLogin
@@ -133,6 +173,21 @@ export function AuthForm() {
         </CardHeader>
 
         <CardContent>
+          {configError && (
+            <div className="mb-4 flex gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+              <AlertCircle className="mt-0.5 size-4 shrink-0" />
+              <div>
+                <p className="font-medium">Supabase configuration error</p>
+                <p className="mt-1 text-destructive/90">{configError}</p>
+                <p className="mt-2 text-destructive/80">
+                  Fix <code className="rounded bg-destructive/10 px-1">.env</code>{" "}
+                  using <code className="rounded bg-destructive/10 px-1">.env.example</code>, then restart{" "}
+                  <code className="rounded bg-destructive/10 px-1">npm run dev</code>.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="mb-6 flex rounded-lg bg-muted p-1">
             <button
               type="button"
@@ -231,17 +286,44 @@ export function AuthForm() {
                   )?.message}
                 </p>
               )}
+              {!isLogin && (
+                <PasswordRequirements password={registerPassword ?? ""} />
+              )}
             </div>
 
             {!isLogin && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    {...registerForm.register("confirmPassword")}
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      {...registerForm.register("confirmPassword")}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      aria-label={
+                        showConfirmPassword
+                          ? "Hide confirm password"
+                          : "Show confirm password"
+                      }
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="size-4" />
+                      ) : (
+                        <Eye className="size-4" />
+                      )}
+                    </button>
+                  </div>
+                  <PasswordMatchIndicator
+                    password={registerPassword ?? ""}
+                    confirmPassword={registerConfirmPassword ?? ""}
                   />
                   {registerForm.formState.errors.confirmPassword && (
                     <p className="text-xs text-destructive">
@@ -273,7 +355,11 @@ export function AuthForm() {
               </>
             )}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading || Boolean(configError)}
+            >
               {loading && <Loader2 className="animate-spin" />}
               {isLogin ? "Sign In" : "Create Account"}
             </Button>

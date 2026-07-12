@@ -44,7 +44,9 @@ begin
     coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
     new.email,
     coalesce(new.raw_user_meta_data->>'role', 'fleet_manager')
-  );
+  )
+  on conflict (id) do nothing;
+
   return new;
 end;
 $$;
